@@ -1,27 +1,15 @@
 <script setup lang="ts">
 const currentDate = "2025-03-22 02:44:36";
 const username = "fgloris";
+const navItems = ['Docs', 'Updates', 'Meeting Records'];
+
 import DownloadBtn from './components/DownloadButton.vue'
+import TopNavBar from './components/TopNavBar.vue'
 </script>
 
 <template>
   <div class="download-page">
-    <nav class="navbar">
-      <div class="nav-left">
-        <a href="#" class="nav-link">Docs</a>
-        <a href="#" class="nav-link">Updates</a>
-        <a href="#" class="nav-link">Meeting Records</a>
-      </div>
-      <div class="nav-right">
-        <div class="user-profile">
-          <span class="username">{{ username }}</span>
-          <div class="avatar">
-            <!-- 这里可以替换成实际的头像图片 -->
-            {{ username.charAt(0).toUpperCase() }}
-          </div>
-        </div>
-      </div>
-    </nav>
+    <TopNavBar v-bind:username="username" v-bind:navItems="navItems" />
 
     <div class="content">
       <img alt="Smart Meeting Assistant logo" class="logo" src="./assets/ic_launcher.png" width="125" height="125" />
@@ -44,58 +32,6 @@ import DownloadBtn from './components/DownloadButton.vue'
   display: flex;
   flex-direction: column; /* 改为纵向排列 */
   color: white;
-}
-
-.navbar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1rem 2rem;
-  background: rgba(255, 255, 255, 0.3);
-  backdrop-filter: blur(10px);
-}
-
-.nav-left {
-  display: flex;
-  gap: 2rem;
-}
-
-.nav-link {
-  color: white;
-  text-decoration: none;
-  font-size: 1rem;
-  transition: opacity 0.3s;
-}
-
-.nav-link:hover {
-  opacity: 0.8;
-}
-
-.nav-right {
-  display: flex;
-  align-items: center;
-}
-
-.user-profile {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-
-.username {
-  color: white;
-}
-
-.avatar {
-  width: 36px;
-  height: 36px;
-  background: #4CAF50;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: bold;
-  cursor: pointer;
 }
 
 .content {
