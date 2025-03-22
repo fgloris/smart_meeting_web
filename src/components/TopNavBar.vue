@@ -1,16 +1,15 @@
 <script setup lang="ts">
 defineProps<{
   username: string
-  navItems: string[]
 }>()
 </script>
 
 <template>
   <nav class="navbar">
     <div class="nav-left">
-      <a href="#" class="nav-link">Docs</a>
-      <a href="#" class="nav-link">Updates</a>
-      <a href="#" class="nav-link">Meeting Records</a>
+      <router-link to="/docs" class="nav-link">Docs</router-link>
+      <router-link to="/updates" class="nav-link">Updates</router-link>
+      <router-link to="/records" class="nav-link">Meeting Records</router-link>
     </div>
     <div class="nav-right">
       <div class="user-profile">
