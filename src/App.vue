@@ -10,7 +10,7 @@ import TopNavBar from './components/TopNavBar.vue'
 <template>
   <div class="download-page">
     <TopNavBar v-bind:username="username" v-bind:navItems="navItems" />
-
+    <div class="gradient-overlay"></div>
     <div class="content">
       <img alt="Smart Meeting Assistant logo" class="logo" src="./assets/ic_launcher.png" width="125" height="125" />
       <h1>智能会议助手</h1>
@@ -34,7 +34,23 @@ import TopNavBar from './components/TopNavBar.vue'
   color: white;
 }
 
+.gradient-overlay {
+  position: absolute;
+  top: 80px;
+  left: 0;
+  right: 0;
+  height: 1000px;
+  background: linear-gradient(to bottom, 
+    rgba(255, 255, 255, 0.30) 0%,
+    rgba(255, 255, 255, 0.2) 30%,
+    rgba(255, 255, 255, 0.1) 60%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  pointer-events: none; /* 确保不会影响其他元素的交互 */
+}
+
 .content {
+  position: relative;
   flex: 1;
   display: flex;
   flex-direction: column;

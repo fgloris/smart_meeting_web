@@ -32,6 +32,7 @@ defineProps<{
   padding: 1rem 2rem;
   background: rgba(255, 255, 255, 0.3);
   backdrop-filter: blur(10px);
+  height: 80px;
 }
 
 .nav-left {
