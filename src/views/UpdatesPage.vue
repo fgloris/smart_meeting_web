@@ -17,9 +17,9 @@
 
 <style scoped>
 .updates-page {
+  z-index: 2;
   padding: 2rem;
   color: white;
-  min-height: 100vh;
 }
 
 .updates-content {

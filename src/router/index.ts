@@ -1,4 +1,4 @@
-import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router'
+import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router'
 import HomeContent from '../components/HomeContent.vue'
 import DocsPage from '../views/DocsPage.vue'
 import UpdatesPage from '../views/UpdatesPage.vue'

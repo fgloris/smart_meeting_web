@@ -1,11 +1,11 @@
 <template>
-  <div class="about-section" v-show="isVisible">
+  <div class="about-section">
     <div class="about-content">
       <h2>关于我们</h2>
       <p>智能会议助手致力于提供高效的会议解决方案，让每一次会议都能事半功倍。</p>
       <div class="contact-info">
         <h3>联系我们</h3>
-        <p>邮箱：contact@smartmeeting.com</p>
+        <p>邮箱: contact@smartmeeting.com</p>
       </div>
       <div class="copyright">
         © 2025 Smart Meeting Assistant. All rights reserved.
@@ -36,8 +36,8 @@ onUnmounted(() => {
 
 <style scoped>
 .about-section {
-  background: rgba(0, 0, 0, 0.8);
-  color: white;
+  z-index: 2;
+  color: rgb(180, 180, 180);
   padding: 3rem 0;
   margin-top: 4rem;
 }
@@ -55,7 +55,7 @@ onUnmounted(() => {
 
 .copyright {
   font-size: 0.9rem;
-  opacity: 0.7;
+  opacity: 0.8;
   margin-top: 2rem;
 }
 </style>

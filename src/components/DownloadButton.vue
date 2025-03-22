@@ -24,8 +24,8 @@ defineProps<{
 }
 
 .download-button {
-  background: #4CAF50;
-  color: white;
+  background: #5f57c7;
+  color: rgb(220, 220, 220);
   border: none;
   padding: 12px 36px;
   border-radius: 24px;
@@ -39,7 +39,7 @@ defineProps<{
 }
 
 .version {
-  font-size: 0.6em;
+  font-size: 0.8em;
   margin: 0;
 }
 </style>

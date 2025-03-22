@@ -11,9 +11,9 @@
 
 <style scoped>
 .docs-page {
+  z-index: 2;
   padding: 2rem;
   color: white;
-  min-height: 100vh;
 }
 
 .docs-content {
