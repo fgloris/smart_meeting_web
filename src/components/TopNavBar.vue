@@ -9,7 +9,7 @@ defineProps<{
     <div class="nav-left">
       <router-link to="/" class="nav-link">下载</router-link>
       <router-link to="/docs" class="nav-link">文档</router-link>
-      <router-link to="/ability" class="nav-link">功能</router-link>
+      <router-link to="/ability/records" class="nav-link">功能</router-link>
     </div>
     <div class="nav-right">
       <div class="user-profile">
@@ -53,13 +53,13 @@ defineProps<{
 }
 
 .nav-link:hover {
-  background-color: rgb(70, 70, 70);
+  background-color: rgb(50, 50, 50, 0.8);
   opacity: 0.8;
 }
 
 .nav-link.router-link-active {
-  background-color: rgb(100, 100, 100);
-  font-weight: 500;
+  background-color: rgb(120, 120, 120, 0.8);
+  font-weight: 1000;
   opacity: 1;
 }
 

@@ -32,10 +32,10 @@ const route = useRoute();
   flex-direction: column; /* 改为纵向排列 */
   color: white;
   background: linear-gradient(to bottom, 
-    rgb(80,80,80) 0%,
-    rgb(80,80,80) 10%,
-    rgb(50,50,50) 60%,
-    rgb(0,0,0) 100%
+    rgb(255, 255, 255, 0.25) 0%,
+    rgb(255, 255, 255, 0.25) 10%,
+    rgb(255, 255, 255, 0.15) 60%,
+    rgb(255, 255, 255, 0.0) 100%
   );
   min-height: 120vh;
 }
