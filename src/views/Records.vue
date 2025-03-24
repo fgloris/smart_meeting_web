@@ -1,6 +1,5 @@
 <template>
-  <div class="docs-page">
-    <h1>文档中心</h1>
+  <div class="records-page">
     <div class="docs-container">
       <transition-group 
         name="slide-fade" 
@@ -15,17 +14,14 @@
           <h2>基础功能</h2>
           <p>探索智能会议助手的核心功能。</p>
         </div>
-        <div class="docs-content" :key="3">
-          <h2>版本日志</h2>
-          <p>我们的项目已经开源，访问github以了解我们的工作。 </p>
-        </div>
+        <!-- 可以添加更多文档内容 -->
       </transition-group>
     </div>
   </div>
 </template>
 
 <style scoped>
-.docs-page {
+.records-page {
   z-index: 1;
   padding: 2rem;
   color: white;

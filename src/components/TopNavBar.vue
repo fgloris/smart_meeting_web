@@ -7,16 +7,14 @@ defineProps<{
 <template>
   <nav class="navbar">
     <div class="nav-left">
-      <router-link to="/" class="nav-link">Home</router-link>
-      <router-link to="/docs" class="nav-link">Docs</router-link>
-      <router-link to="/updates" class="nav-link">Updates</router-link>
-      <router-link to="/records" class="nav-link">Meeting Records</router-link>
+      <router-link to="/" class="nav-link">下载</router-link>
+      <router-link to="/docs" class="nav-link">文档</router-link>
+      <router-link to="/ability" class="nav-link">功能</router-link>
     </div>
     <div class="nav-right">
       <div class="user-profile">
         <span class="username">{{ username }}</span>
         <div class="avatar">
-          <!-- 这里可以替换成实际的头像图片 -->
           {{ username.charAt(0).toUpperCase() }}
         </div>
       </div>
@@ -26,13 +24,16 @@ defineProps<{
 
 <style scoped>
 .navbar {
-  z-index: 2;
+  position: fixed;
+  top:0;
+  left: 0;
+  right: 0;
+  z-index: 3;
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 1rem 1rem;
-  background: rgb(80, 80, 80);
-  backdrop-filter: blur(10px);
+  background: transparent;
   height: 80px;
 }
 
@@ -47,12 +48,19 @@ defineProps<{
   font-size: 1rem;
   padding: 10px 20px;
   border-radius: 20px;
+  backdrop-filter: blur(10px);
   transition: opacity 0.3s;
 }
 
 .nav-link:hover {
-  color: white;
+  background-color: rgb(70, 70, 70);
   opacity: 0.8;
+}
+
+.nav-link.router-link-active {
+  background-color: rgb(100, 100, 100);
+  font-weight: 500;
+  opacity: 1;
 }
 
 .nav-right {

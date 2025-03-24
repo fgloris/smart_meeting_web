@@ -1,7 +1,9 @@
 import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router'
-import HomeContent from '../components/HomeContent.vue'
-import DocsPage from '../views/DocsPage.vue'
-import UpdatesPage from '../views/UpdatesPage.vue'
+import HomeContent from '@/components/HomeContent.vue'
+import DocsPage from '@/views/DocsPage.vue'
+import AbilityPage from '@/views/Ability.vue'
+import RecordsPage from '@/views/Records.vue'
+import StreamPage from '@/views/Stream.vue'
 
 const routes: Array<RouteRecordRaw> = [
   {
@@ -15,9 +17,19 @@ const routes: Array<RouteRecordRaw> = [
     component: DocsPage
   },
   {
-    path: '/updates',
-    name: 'Updates',
-    component: UpdatesPage
+    path: '/ability',
+    name: 'Ability',
+    component: AbilityPage
+  },
+  {
+    path: '/ability/records',
+    name: 'Records',
+    component: RecordsPage
+  },
+  {
+    path: '/ability/stream',
+    name: 'Stream',
+    component: StreamPage
   }
 ]
 
