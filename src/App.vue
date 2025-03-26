@@ -42,6 +42,6 @@ const route = useRoute();
 .content{
   display: flex;
   flex-direction: column;
-  margin-top: 3%;
+  margin-top: 4%;
 }
 </style>
