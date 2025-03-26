@@ -6,6 +6,7 @@
     <div class="nav-left">
       <router-link to="/ability/records" class="nav-link first":key="1">会议记录</router-link>
       <router-link to="/ability/stream" class="nav-link second":key="2">直播开会</router-link>
+      <router-link to="/ability/chat" class="nav-link third":key="3">ai助手</router-link>
     </div>
   </nav>
 </template>
@@ -46,6 +47,7 @@
   padding: 10px 20px;
   transition: opacity 0.3s;
   animation: slide-down 0.5s ease-out;
+  text-align: center;
 }
 
 .nav-link:hover {

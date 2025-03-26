@@ -5,7 +5,7 @@ import DownloadBtn from './DownloadButton.vue'
 <template>
   <div class="content">
     <transition name="fade-down" appear>
-      <img alt="Smart Meeting Assistant logo" class="logo" src="../assets/ic_launcher.png" width="125" height="125" />
+      <img alt="Smart Meeting Assistant logo" class="logo" src="@/assets/ic_launcher.png" width="125" height="125" />
     </transition>
     <transition name="fade-right" appear>
       <h1>智能会议助手</h1>

@@ -1,37 +1,61 @@
 <script setup lang="ts">
-import { ref } from 'vue';
-import { useAuthStore } from '@/stores/auth';
+import { ref } from 'vue'
+import { useAuthStore } from '@/stores/auth'
+import Toast from './Toast.vue'
 
-const authStore = useAuthStore();
-const showLoginModal = ref(false);
-const isRegistering = ref(false);
+const authStore = useAuthStore()
+const showLoginModal = ref(false)
+const isRegistering = ref(false)
+const toastMessage = ref('')
+const showToast = ref(false)
+
+const showToastMessage = (message: string) => {
+  toastMessage.value = message
+  showToast.value = true
+}
 
 const handleLogin = async () => {
-  if (await authStore.login()) {
-    showLoginModal.value = false;
+  const result = await authStore.login()
+  if (result.success) {
+    showLoginModal.value = false
+    showToastMessage(`欢迎回来，${authStore.user?.username}`)
+  } else {
+    showToastMessage(result.error?.message || '登录失败')
   }
-};
+}
 
 const handleLogout = () => {
-  authStore.logout();
-};
+  authStore.logout()
+  showToastMessage('已退出登录')
+}
 
 const handleVerify = async () => {
-  await authStore.verify();
-};
+  const result = await authStore.verify()
+  if (result.success) {
+    showToastMessage('验证码已发送')
+  } else {
+    showToastMessage(result.error?.message || '验证码发送失败')
+  }
+}
 
 const handleRegister = async () => {
-  await authStore.register();
-};
+  const result = await authStore.register()
+  if (result.success) {
+    showLoginModal.value = false
+    showToastMessage(`欢迎您，${authStore.user?.username}`)
+  } else {
+    showToastMessage(result.error?.message || '注册失败')
+  }
+}
 
 const switchMode = () => {
-  isRegistering.value = !isRegistering.value;
+  isRegistering.value = !isRegistering.value
   // Reset form data when switching modes
-  authStore.tempUserEmail = '';
-  authStore.tempUserPasswd = '';
-  authStore.tempUserName = '';
-  authStore.tempUserVerifyCode = '';
-};
+  authStore.tempUserEmail = ''
+  authStore.tempUserPasswd = ''
+  authStore.tempUserName = ''
+  authStore.tempUserVerifyCode = ''
+}
 </script>
 
 <template>
@@ -54,7 +78,7 @@ const switchMode = () => {
   <div v-if="showLoginModal" class="modal-overlay">
     <div class="modal">
       <h2>{{ isRegistering ? '注册' : '登录' }}</h2>
-      
+
       <!-- Login Form -->
       <template v-if="!isRegistering">
         <input v-model="authStore.tempUserEmail" placeholder="邮箱" />
@@ -83,12 +107,13 @@ const switchMode = () => {
       </template>
     </div>
   </div>
+  <Toast v-if="showToast" :message="toastMessage" />
 </template>
 
 <style scoped>
 .navbar {
   position: fixed;
-  top:0;
+  top: 0;
   left: 0;
   right: 0;
   z-index: 3;
@@ -144,7 +169,7 @@ const switchMode = () => {
 .avatar {
   width: 36px;
   height: 36px;
-  background: #4CAF50;
+  background: #4caf50;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -235,7 +260,7 @@ const switchMode = () => {
 }
 
 .verify-btn:hover {
-  background: rgba(149, 128, 255, 1.0);
+  background: rgba(149, 128, 255, 1);
 }
 
 .modal {
@@ -251,7 +276,7 @@ const switchMode = () => {
 }
 
 .modal-buttons button:hover {
-  background: rgba(149, 128, 255, 1.0);
+  background: rgba(149, 128, 255, 1);
 }
 
 .modal-buttons-switchmode {
@@ -267,6 +292,6 @@ const switchMode = () => {
 }
 
 .modal-buttons-switchmode:hover {
-  color: rgba(149, 128, 255, 1.0);
+  color: rgba(149, 128, 255, 1);
 }
 </style>
