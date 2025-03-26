@@ -10,8 +10,8 @@ const route = useRoute();
 </script>
 
 <template>
-  <div class="download-page">
-    <TopNavBar v-bind:username="username" />
+  <div class="main-page">
+    <TopNavBar/>
     <div class="content">
       <RouterView v-slot="{ Component }">
         <SideNavBar v-show="route.path.startsWith('/ability')" />
@@ -23,7 +23,7 @@ const route = useRoute();
 </template>
 
 <style scoped>
-.download-page {
+.main-page {
   z-index: 0;
   margin: auto;
   background: black;

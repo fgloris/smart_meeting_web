@@ -12,6 +12,8 @@ interface FileItem {
 const fileList = ref<FileItem[]>([]);
 const loading = ref(true);
 
+const fileInput = ref<HTMLInputElement | null>(null);
+
 // 模拟从后端获取数据
 const fetchFiles = async () => {
   loading.value = true;
@@ -25,8 +27,35 @@ const fetchFiles = async () => {
 };
 
 const handleUpload = () => {
-  // 模拟文件上传
-  console.log('uploading...');
+  fileInput.value?.click();
+};
+
+const handleFileSelect = async (event: Event) => {
+  const input = event.target as HTMLInputElement;
+  if (!input.files?.length) return;
+
+  const file = input.files[0];
+  loading.value = true;
+
+  // 模拟上传过程
+  await new Promise(resolve => setTimeout(resolve, 1500));
+
+  // 模拟上传成功，添加新文件到列表
+  const newFile: FileItem = {
+    id: fileList.value.length + 1,
+    name: file.name,
+    size: `${(file.size / (1024 * 1024)).toFixed(1)}MB`,
+    date: new Date().toISOString().split('T')[0],
+    type: file.name.split('.').pop() || ''
+  };
+
+  fileList.value = [newFile, ...fileList.value];
+  loading.value = false;
+
+  // 重置 input
+  if (fileInput.value) {
+    fileInput.value.value = '';
+  }
 };
 
 const handleDownload = (file: FileItem) => {
@@ -41,6 +70,13 @@ onMounted(() => {
 
 <template>
   <div class="records-page">
+    <input
+      ref="fileInput"
+      type="file"
+      @change="handleFileSelect"
+      style="display: none"
+      accept=".doc,.docx,.pdf,.mp3,.mp4"
+    />
     <div class="header">
       <h1>会议文件</h1>
       <button class="upload-btn" @click="handleUpload">上传文件</button>
@@ -72,6 +108,7 @@ onMounted(() => {
   color: white;
   min-height: 100vh;
   background: transparent;
+  margin-left: 7%;
 }
 
 .header {
@@ -132,7 +169,6 @@ onMounted(() => {
   background: rgba(149, 128, 255, 0.6);
 }
 
-/* 动画效果 */
 .list-enter-active,
 .list-leave-active {
   transition: all 0.5s ease;
