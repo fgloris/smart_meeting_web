@@ -4,11 +4,11 @@ import { useAuthStore } from '@/stores/auth'
 import { createMeeting, type CreateMeetingData } from '@/services/api'
 
 const props = defineProps<{
-  show: boolean
+  modelValue: boolean
 }>()
 
 const emit = defineEmits<{
-  (e: 'update:show', value: boolean): void
+  (e: 'update:modelValue', value: boolean): void
   (e: 'refresh'): void
 }>()
 
@@ -50,7 +50,7 @@ const handleCreateMeeting = async () => {
     await createMeeting(meetingData)
     console.info('会议创建成功')
 
-    emit('update:show', false)
+    emit('update:modelValue', false)
     emit('refresh')
 
     // 重置表单
@@ -73,7 +73,7 @@ const handleCreateMeeting = async () => {
 </script>
 
 <template>
-  <div v-if="show" class="modal-overlay">
+  <div v-if="modelValue" class="modal-overlay">
     <div class="modal">
       <h2>新建会议</h2>
       <div class="form-group">
@@ -108,7 +108,7 @@ const handleCreateMeeting = async () => {
       </div>
       <div class="modal-buttons">
         <button class="confirm-btn" @click="handleCreateMeeting">确认</button>
-        <button class="cancel-btn" @click="$emit('update:show', false)">取消</button>
+        <button class="cancel-btn" @click="$emit('update:modelValue', false)">取消</button>
       </div>
     </div>
   </div>

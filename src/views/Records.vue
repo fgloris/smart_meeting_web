@@ -12,6 +12,7 @@ import {
   type MeetingFile,
   type CreateMeetingData,
 } from '@/services/api'
+import CreateMeetingModal from '@/components/CreateMeetingModal.vue'
 
 interface MeetingWithFiles extends Meeting {
   files: MeetingFile[]
@@ -219,50 +220,7 @@ onMounted(() => {
     </div>
 
     <!-- 新建会议模态框 -->
-    <div v-if="showCreateMeetingModal" class="modal-overlay">
-      <div class="modal">
-        <h2>新建会议</h2>
-        <div class="form-group">
-          <input
-            v-model.number="newMeeting.meetingid"
-            type="number"
-            placeholder="会议ID"
-            class="form-input"
-            required
-          />
-        </div>
-        <div class="form-group">
-          <input
-            v-model="newMeeting.meetingname"
-            type="text"
-            placeholder="会议名称"
-            class="form-input"
-            required
-          />
-        </div>
-        <div class="form-group">
-          <input
-            v-model="newMeeting.meetinglocation"
-            type="text"
-            placeholder="会议地点"
-            class="form-input"
-            required
-          />
-        </div>
-        <div class="form-group">
-          <input
-            v-model="newMeeting.meetingtime"
-            type="datetime-local"
-            class="form-input"
-            required
-          />
-        </div>
-        <div class="modal-buttons">
-          <button class="confirm-btn" @click="handleCreateMeeting">确认</button>
-          <button class="cancel-btn" @click="showCreateMeetingModal = false">取消</button>
-        </div>
-      </div>
-    </div>
+    <CreateMeetingModal v-model="showCreateMeetingModal" @refresh="fetchMeetingsAndFiles" />
 
     <div v-if="loading" class="loading">加载中...</div>
     <div v-else class="meetings-container">
