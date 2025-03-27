@@ -1,7 +1,13 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useAuthStore } from '@/stores/auth'
-import type { Meeting, MeetingFile } from '@/services/api'
+import {
+  uploadMeetingFile,
+  downloadMeetingFile,
+  deleteMeetingFile,
+  type Meeting,
+  type MeetingFile,
+} from '@/services/api'
 
 const props = defineProps<{
   meeting: Meeting & { files: MeetingFile[] }
@@ -13,12 +19,50 @@ const emit = defineEmits<{
 
 const authStore = useAuthStore()
 const fileInput = ref<HTMLInputElement | null>(null)
+const loading = ref(false)
 
-const handleFileSelect = (event: Event, meetingId: number) => {
+const handleFileSelect = async (event: Event, meetingId: number) => {
   const input = event.target as HTMLInputElement
-  if (input.files && input.files.length > 0) {
-    // TODO: 实现文件上传功能
-    console.info('文件已选择，meetingId:', meetingId)
+  if (!input.files?.length) {
+    console.info('未选择文件')
+    return
+  }
+
+  const file = input.files[0]
+  console.info('选择的文件:', {
+    name: file.name,
+    size: file.size,
+    type: file.type,
+  })
+
+  loading.value = true
+
+  try {
+    if (!authStore.isAuthenticated || !authStore.user) {
+      console.error('上传时检查到未登录状态')
+      throw new Error('请先登录')
+    }
+
+    console.info('开始上传文件，参数:', {
+      meetingId,
+      uploaderId: authStore.user.uid,
+      fileName: file.name,
+    })
+
+    await uploadMeetingFile(meetingId, authStore.user.uid, file)
+    console.info('文件上传成功')
+
+    // 刷新文件列表
+    console.info('开始刷新文件列表')
+    emit('refresh')
+    console.info('文件列表刷新完成')
+  } catch (error) {
+    console.error('文件上传失败:', error)
+  } finally {
+    loading.value = false
+    if (fileInput.value) {
+      fileInput.value.value = ''
+    }
   }
 }
 
@@ -30,14 +74,33 @@ const handleUpload = (meetingId: number) => {
   fileInput.value?.click()
 }
 
-const handleDownload = (file: MeetingFile) => {
-  // TODO: 实现文件下载功能
-  console.info('准备下载文件:', file)
+const handleDownload = async (file: MeetingFile) => {
+  try {
+    const blob = await downloadMeetingFile(file.id)
+    const url = window.URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = file.file_name
+    document.body.appendChild(a)
+    a.click()
+    window.URL.revokeObjectURL(url)
+    document.body.removeChild(a)
+  } catch (error) {
+    console.error('文件下载失败:', error)
+  }
 }
 
-const handleDelete = (file: MeetingFile) => {
-  // TODO: 实现文件删除功能
-  console.info('准备删除文件:', file)
+const handleDelete = async (file: MeetingFile) => {
+  if (!confirm('确定要删除这个文件吗？')) {
+    return
+  }
+
+  try {
+    await deleteMeetingFile(file.id)
+    emit('refresh')
+  } catch (error) {
+    console.error('文件删除失败:', error)
+  }
 }
 
 const formatFileSize = (size: number): string => {
