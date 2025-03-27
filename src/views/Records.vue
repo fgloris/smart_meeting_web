@@ -5,8 +5,12 @@ import {
   getMeetings,
   getMeetingFiles,
   uploadMeetingFile,
+  downloadMeetingFile,
+  deleteMeetingFile,
+  createMeeting,
   type Meeting,
   type MeetingFile,
+  type CreateMeetingData,
 } from '@/services/api'
 
 interface MeetingWithFiles extends Meeting {
@@ -17,6 +21,14 @@ const authStore = useAuthStore()
 const meetings = ref<MeetingWithFiles[]>([])
 const loading = ref(true)
 const fileInputs = ref<{ [key: number]: HTMLInputElement | null }>({})
+const showCreateMeetingModal = ref(false)
+const newMeeting = ref<CreateMeetingData>({
+  meetingid: 0,
+  meetingname: '',
+  meetinglocation: '',
+  meetingtime: '',
+  meetingmembers: [authStore.user?.uid || 0],
+})
 
 // 获取所有会议和文件
 const fetchMeetingsAndFiles = async () => {
@@ -41,10 +53,6 @@ const fetchMeetingsAndFiles = async () => {
 }
 
 const handleUpload = (meetingId: number) => {
-  console.info('点击上传按钮，meetingId:', meetingId)
-  console.info('当前登录状态:', authStore.isAuthenticated)
-  console.info('当前用户信息:', authStore.user)
-
   if (!authStore.isAuthenticated || !authStore.user) {
     console.error('未登录，无法上传文件')
     return
@@ -113,14 +121,83 @@ const handleFileSelect = async (event: Event, meetingId: number) => {
   }
 }
 
-const handleDownload = (file: MeetingFile) => {
-  // TODO: 实现文件下载功能
-  console.log('downloading...', file.file_name)
+const handleCreateMeeting = async () => {
+  if (!authStore.isAuthenticated || !authStore.user) {
+    console.error('未登录，无法创建会议')
+    return
+  }
+
+  // 验证必填字段
+  if (
+    !newMeeting.value.meetingid ||
+    !newMeeting.value.meetingname ||
+    !newMeeting.value.meetinglocation ||
+    !newMeeting.value.meetingtime
+  ) {
+    console.error('请填写所有必填字段')
+    return
+  }
+
+  try {
+    // 确保 meetingid 是数字
+    const meetingData = {
+      ...newMeeting.value,
+      meetingid: Number(newMeeting.value.meetingid),
+      meetingmembers: [authStore.user.uid],
+    }
+
+    console.info('准备创建会议，数据:', meetingData)
+    await createMeeting(meetingData)
+    console.info('会议创建成功')
+
+    showCreateMeetingModal.value = false
+    await fetchMeetingsAndFiles()
+
+    // 重置表单
+    newMeeting.value = {
+      meetingid: 0,
+      meetingname: '',
+      meetinglocation: '',
+      meetingtime: '',
+      meetingmembers: [authStore.user.uid],
+    }
+  } catch (error: any) {
+    console.error('创建会议失败:', error)
+    if (error.response?.data?.error) {
+      alert(error.response.data.error)
+    } else {
+      alert('创建会议失败，请检查输入数据是否正确')
+    }
+  }
 }
 
-const handleDelete = (file: MeetingFile) => {
-  // TODO: 实现文件删除功能
-  console.log('deleting...', file.file_name)
+const handleDownload = async (file: MeetingFile) => {
+  try {
+    const blob = await downloadMeetingFile(file.id)
+    const url = window.URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = file.file_name
+    document.body.appendChild(a)
+    a.click()
+    window.URL.revokeObjectURL(url)
+    document.body.removeChild(a)
+  } catch (error) {
+    console.error('文件下载失败:', error)
+  }
+}
+
+const handleDelete = async (file: MeetingFile) => {
+  if (!confirm('确定要删除这个文件吗？')) {
+    return
+  }
+
+  try {
+    await deleteMeetingFile(file.id)
+    await fetchMeetingsAndFiles()
+  } catch (error) {
+    console.error('文件删除失败:', error)
+  }
 }
 
 const formatFileSize = (size: number) => {
@@ -138,6 +215,53 @@ onMounted(() => {
   <div class="records-page">
     <div class="header">
       <h1>会议文件</h1>
+      <button class="create-meeting-btn" @click="showCreateMeetingModal = true">新建会议</button>
+    </div>
+
+    <!-- 新建会议模态框 -->
+    <div v-if="showCreateMeetingModal" class="modal-overlay">
+      <div class="modal">
+        <h2>新建会议</h2>
+        <div class="form-group">
+          <input
+            v-model.number="newMeeting.meetingid"
+            type="number"
+            placeholder="会议ID"
+            class="form-input"
+            required
+          />
+        </div>
+        <div class="form-group">
+          <input
+            v-model="newMeeting.meetingname"
+            type="text"
+            placeholder="会议名称"
+            class="form-input"
+            required
+          />
+        </div>
+        <div class="form-group">
+          <input
+            v-model="newMeeting.meetinglocation"
+            type="text"
+            placeholder="会议地点"
+            class="form-input"
+            required
+          />
+        </div>
+        <div class="form-group">
+          <input
+            v-model="newMeeting.meetingtime"
+            type="datetime-local"
+            class="form-input"
+            required
+          />
+        </div>
+        <div class="modal-buttons">
+          <button class="confirm-btn" @click="handleCreateMeeting">确认</button>
+          <button class="cancel-btn" @click="showCreateMeetingModal = false">取消</button>
+        </div>
+      </div>
     </div>
 
     <div v-if="loading" class="loading">加载中...</div>
@@ -202,6 +326,9 @@ onMounted(() => {
 
 .header {
   margin-bottom: 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .meetings-container {
@@ -344,5 +471,96 @@ onMounted(() => {
   text-align: center;
   padding: 2rem;
   color: rgba(255, 255, 255, 0.6);
+}
+
+.create-meeting-btn {
+  padding: 0.5rem 1rem;
+  background: rgba(149, 128, 255, 0.6);
+  border: none;
+  border-radius: 4px;
+  color: white;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.create-meeting-btn:hover {
+  background: rgba(149, 128, 255, 0.8);
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  padding: 2rem;
+  border-radius: 8px;
+  width: 400px;
+  color: white;
+}
+
+.modal h2 {
+  margin: 0 0 1.5rem 0;
+  text-align: center;
+}
+
+.form-group {
+  margin-bottom: 1rem;
+}
+
+.form-input {
+  width: 100%;
+  padding: 0.5rem;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+  color: white;
+}
+
+.form-input::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.modal-buttons {
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+  margin-top: 1.5rem;
+}
+
+.confirm-btn {
+  padding: 0.5rem 1rem;
+  background: rgba(149, 128, 255, 0.6);
+  border: none;
+  border-radius: 4px;
+  color: white;
+  cursor: pointer;
+}
+
+.confirm-btn:hover {
+  background: rgba(149, 128, 255, 0.8);
+}
+
+.cancel-btn {
+  padding: 0.5rem 1rem;
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  border-radius: 4px;
+  color: white;
+  cursor: pointer;
+}
+
+.cancel-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
 }
 </style>

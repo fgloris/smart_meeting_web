@@ -34,6 +34,14 @@ export interface MeetingFilesResponse {
   meeting_id: number
 }
 
+export interface CreateMeetingData {
+  meetingid: number
+  meetingname: string
+  meetinglocation: string
+  meetingtime: string
+  meetingmembers: number[]
+}
+
 export const login = async (useremail: string, userpassword: string) => {
   const response = await api.post('/api/user/login', { useremail, userpassword })
   return response.data
@@ -88,6 +96,24 @@ export const uploadMeetingFile = async (
     },
   })
 
+  return response.data
+}
+
+export const createMeeting = async (data: CreateMeetingData) => {
+  console.info('创建会议请求数据:', data)
+  const response = await api.post('/api/meeting/create', data)
+  return response.data
+}
+
+export const downloadMeetingFile = async (fileId: number) => {
+  const response = await api.get(`/api/meeting/file/download/${fileId}`, {
+    responseType: 'blob',
+  })
+  return response.data
+}
+
+export const deleteMeetingFile = async (fileId: number) => {
+  const response = await api.delete(`/api/meeting/file/${fileId}`)
   return response.data
 }
 
