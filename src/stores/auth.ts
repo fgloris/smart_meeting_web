@@ -11,9 +11,8 @@ export const useAuthStore = defineStore('auth', {
     tempUserPasswd: '',
     tempUserName: '',
     tempUserVerifyCode: '',
-    user: null as { useremail: string; username: string; password: string } | null,
+    user: null as { useremail: string; username: string; password: string; uid: number } | null,
     isAuthenticated: false,
-    error: null as AuthError | null,
   }),
 
   actions: {
@@ -25,14 +24,13 @@ export const useAuthStore = defineStore('auth', {
           useremail: response.user.useremail,
           username: response.user.username,
           password: response.user.userpassword,
+          uid: response.user.uid,
         }
         this.isAuthenticated = true
-        this.error = null
-        return { success: true }
+        return true
       } catch (error) {
         console.error('Login error:', error)
-        this.error = { message: '登录失败，请检查邮箱地址或密码' }
-        return { success: false, error: this.error }
+        return false
       }
     },
 
@@ -40,12 +38,10 @@ export const useAuthStore = defineStore('auth', {
       try {
         const response = await verify(this.tempUserEmail)
         console.info('Verify response:', response)
-        this.error = null
-        return { success: true }
+        return true
       } catch (error) {
         console.error('Verify error:', error)
-        this.error = { message: '验证码发送失败，请稍后重试' }
-        return { success: false, error: this.error }
+        return false
       }
     },
 
@@ -62,14 +58,13 @@ export const useAuthStore = defineStore('auth', {
           useremail: this.tempUserEmail,
           username: this.tempUserName,
           password: this.tempUserPasswd,
+          uid: response.user.uid,
         }
         this.isAuthenticated = true
-        this.error = null
-        return { success: true }
+        return true
       } catch (error) {
         console.error('Register error:', error)
-        this.error = { message: '注册失败，请检查验证码并稍后重试' }
-        return { success: false, error: this.error }
+        return false
       }
     },
 
@@ -77,7 +72,6 @@ export const useAuthStore = defineStore('auth', {
       console.info('Logout')
       this.user = null
       this.isAuthenticated = false
-      this.error = null
     },
   },
 })

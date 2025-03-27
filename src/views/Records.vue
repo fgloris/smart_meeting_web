@@ -1,101 +1,190 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted } from 'vue'
+import { useAuthStore } from '@/stores/auth'
+import {
+  getMeetings,
+  getMeetingFiles,
+  uploadMeetingFile,
+  type Meeting,
+  type MeetingFile,
+} from '@/services/api'
 
-interface FileItem {
-  id: number;
-  name: string;
-  size: string;
-  date: string;
-  type: string;
+interface MeetingWithFiles extends Meeting {
+  files: MeetingFile[]
 }
 
-const fileList = ref<FileItem[]>([]);
-const loading = ref(true);
+const authStore = useAuthStore()
+const meetings = ref<MeetingWithFiles[]>([])
+const loading = ref(true)
+const fileInputs = ref<{ [key: number]: HTMLInputElement | null }>({})
 
-const fileInput = ref<HTMLInputElement | null>(null);
-
-// 模拟从后端获取数据
-const fetchFiles = async () => {
-  loading.value = true;
-  await new Promise(resolve => setTimeout(resolve, 1000));
-  fileList.value = [
-    { id: 1, name: '会议记录-2024-01.docx', size: '2.3MB', date: '2024-01-20', type: 'docx' },
-    { id: 2, name: '会议录音-2024-01.mp3', size: '15.7MB', date: '2024-01-20', type: 'mp3' },
-    { id: 3, name: '会议总结.pdf', size: '1.2MB', date: '2024-01-21', type: 'pdf' },
-  ];
-  loading.value = false;
-};
-
-const handleUpload = () => {
-  fileInput.value?.click();
-};
-
-const handleFileSelect = async (event: Event) => {
-  const input = event.target as HTMLInputElement;
-  if (!input.files?.length) return;
-
-  const file = input.files[0];
-  loading.value = true;
-
-  // 模拟上传过程
-  await new Promise(resolve => setTimeout(resolve, 1500));
-
-  // 模拟上传成功，添加新文件到列表
-  const newFile: FileItem = {
-    id: fileList.value.length + 1,
-    name: file.name,
-    size: `${(file.size / (1024 * 1024)).toFixed(1)}MB`,
-    date: new Date().toISOString().split('T')[0],
-    type: file.name.split('.').pop() || ''
-  };
-
-  fileList.value = [newFile, ...fileList.value];
-  loading.value = false;
-
-  // 重置 input
-  if (fileInput.value) {
-    fileInput.value.value = '';
+// 获取所有会议和文件
+const fetchMeetingsAndFiles = async () => {
+  loading.value = true
+  try {
+    const meetingsData = await getMeetings()
+    const meetingsWithFiles = await Promise.all(
+      meetingsData.map(async (meeting: Meeting) => {
+        const filesData = await getMeetingFiles(meeting.id)
+        return {
+          ...meeting,
+          files: filesData.files,
+        }
+      }),
+    )
+    meetings.value = meetingsWithFiles
+  } catch (error) {
+    console.error('Failed to fetch meetings and files:', error)
+  } finally {
+    loading.value = false
   }
-};
+}
 
-const handleDownload = (file: FileItem) => {
-  // 模拟文件下载
-  console.log('downloading...', file.name);
-};
+const handleUpload = (meetingId: number) => {
+  console.info('点击上传按钮，meetingId:', meetingId)
+  console.info('当前登录状态:', authStore.isAuthenticated)
+  console.info('当前用户信息:', authStore.user)
+
+  if (!authStore.isAuthenticated || !authStore.user) {
+    console.error('未登录，无法上传文件')
+    return
+  }
+
+  const fileInput = fileInputs.value[meetingId]
+  console.info('文件输入元素:', fileInput)
+
+  if (!fileInput) {
+    console.error('未找到文件输入元素')
+    return
+  }
+
+  fileInput.click()
+  console.info('已触发文件选择对话框')
+}
+
+const handleFileSelect = async (event: Event, meetingId: number) => {
+  console.info('文件选择事件触发，meetingId:', meetingId)
+
+  const input = event.target as HTMLInputElement
+  console.info('文件输入元素:', input)
+
+  if (!input.files?.length) {
+    console.info('未选择文件')
+    return
+  }
+
+  const file = input.files[0]
+  console.info('选择的文件:', {
+    name: file.name,
+    size: file.size,
+    type: file.type,
+  })
+
+  loading.value = true
+
+  try {
+    if (!authStore.isAuthenticated || !authStore.user) {
+      console.error('上传时检查到未登录状态')
+      throw new Error('请先登录')
+    }
+
+    console.info('开始上传文件，参数:', {
+      meetingId,
+      uploaderId: authStore.user.uid,
+      fileName: file.name,
+    })
+
+    await uploadMeetingFile(meetingId, authStore.user.uid, file)
+    console.info('文件上传成功')
+
+    // 刷新文件列表
+    console.info('开始刷新文件列表')
+    await fetchMeetingsAndFiles()
+    console.info('文件列表刷新完成')
+  } catch (error) {
+    console.error('文件上传失败:', error)
+  } finally {
+    loading.value = false
+    // 重置 input
+    if (fileInputs.value[meetingId]) {
+      fileInputs.value[meetingId]!.value = ''
+      console.info('已重置文件输入框')
+    }
+  }
+}
+
+const handleDownload = (file: MeetingFile) => {
+  // TODO: 实现文件下载功能
+  console.log('downloading...', file.file_name)
+}
+
+const handleDelete = (file: MeetingFile) => {
+  // TODO: 实现文件删除功能
+  console.log('deleting...', file.file_name)
+}
+
+const formatFileSize = (size: number) => {
+  if (size < 1024) return size + ' B'
+  if (size < 1024 * 1024) return (size / 1024).toFixed(1) + ' KB'
+  return (size / (1024 * 1024)).toFixed(1) + ' MB'
+}
 
 onMounted(() => {
-  fetchFiles();
-});
+  fetchMeetingsAndFiles()
+})
 </script>
 
 <template>
   <div class="records-page">
-    <input
-      ref="fileInput"
-      type="file"
-      @change="handleFileSelect"
-      style="display: none"
-      accept=".doc,.docx,.pdf,.mp3,.mp4"
-    />
     <div class="header">
       <h1>会议文件</h1>
-      <button class="upload-btn" @click="handleUpload">上传文件</button>
     </div>
-    
-    <div class="file-container">
-      <transition-group name="list" tag="div" class="file-list">
-        <div v-if="loading" key="loading" class="loading">加载中...</div>
-        <div v-else v-for="file in fileList" 
-             :key="file.id" 
-             class="file-item">
-          <div class="file-info">
-            <span class="file-name">{{ file.name }}</span>
-            <span class="file-size">{{ file.size }}</span>
-            <span class="file-date">{{ file.date }}</span>
+
+    <div v-if="loading" class="loading">加载中...</div>
+    <div v-else class="meetings-container">
+      <div v-for="meeting in meetings" :key="meeting.id" class="meeting-section">
+        <div class="meeting-header">
+          <div class="meeting-title">
+            <h2>{{ meeting.meetingname }}</h2>
+            <div class="meeting-info">
+              <span>地点：{{ meeting.meetinglocation }}</span>
+              <span>时间：{{ meeting.meetingtime }}</span>
+              <span>参会人数：{{ meeting.meetingmember }}</span>
+            </div>
           </div>
-          <button class="download-btn" @click="handleDownload(file)">下载</button>
+          <div class="meeting-actions">
+            <input
+              :ref="
+                (el) => {
+                  fileInputs[meeting.id] = el as HTMLInputElement
+                  console.info('文件输入元素已绑定，meetingId:', meeting.id)
+                }
+              "
+              type="file"
+              @change="(e) => handleFileSelect(e, meeting.id)"
+              style="display: none"
+              accept=".ppt, .pptx, .xls, .xlsx, .png, .doc, .docx, .mp3, .mp4, .pdf, .txt, .jpg, .jpeg, .png, .gif, .zip, .rar"
+            />
+            <button class="upload-btn" @click="handleUpload(meeting.id)">上传文件</button>
+          </div>
         </div>
-      </transition-group>
+
+        <div v-if="meeting.files.length === 0" class="no-files">暂无文件</div>
+        <div v-else class="file-list">
+          <div v-for="file in meeting.files" :key="file.id" class="file-item">
+            <div class="file-info">
+              <span class="file-name">{{ file.file_name }}</span>
+              <span class="file-size">{{ formatFileSize(file.file_size) }}</span>
+              <span class="file-date">{{ file.upload_time }}</span>
+              <span class="file-type">{{ file.file_type }}</span>
+            </div>
+            <div class="file-actions">
+              <button class="download-btn" @click="handleDownload(file)">下载</button>
+              <button class="delete-btn" @click="handleDelete(file)">删除</button>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -112,10 +201,48 @@ onMounted(() => {
 }
 
 .header {
+  margin-bottom: 2rem;
+}
+
+.meetings-container {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  margin-left: 5%;
+  margin-right: 7%;
+}
+
+.meeting-section {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 1.5rem;
+}
+
+.meeting-header {
+  margin-bottom: 1.5rem;
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  margin-bottom: 2rem;
+  align-items: flex-start;
+}
+
+.meeting-title {
+  flex: 1;
+}
+
+.meeting-header h2 {
+  margin: 0 0 0.5rem 0;
+  color: white;
+}
+
+.meeting-info {
+  display: flex;
+  gap: 1.5rem;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.9rem;
+}
+
+.meeting-actions {
+  margin-left: 1rem;
 }
 
 .upload-btn {
@@ -132,10 +259,17 @@ onMounted(() => {
   background: rgba(149, 128, 255, 0.8);
 }
 
-.file-container {
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 8px;
-  padding: 1rem;
+.no-files {
+  text-align: center;
+  padding: 2rem;
+  color: rgba(255, 255, 255, 0.5);
+  font-style: italic;
+}
+
+.file-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 
 .file-item {
@@ -143,7 +277,8 @@ onMounted(() => {
   justify-content: space-between;
   align-items: center;
   padding: 1rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 4px;
   transition: all 0.3s;
 }
 
@@ -154,6 +289,29 @@ onMounted(() => {
 .file-info {
   display: flex;
   gap: 2rem;
+  align-items: center;
+}
+
+.file-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.file-name {
+  min-width: 200px;
+}
+
+.file-size {
+  min-width: 80px;
+}
+
+.file-date {
+  min-width: 150px;
+}
+
+.file-type {
+  min-width: 60px;
+  text-transform: uppercase;
 }
 
 .download-btn {
@@ -169,15 +327,17 @@ onMounted(() => {
   background: rgba(149, 128, 255, 0.6);
 }
 
-.list-enter-active,
-.list-leave-active {
-  transition: all 0.5s ease;
+.delete-btn {
+  padding: 0.3rem 0.8rem;
+  background: rgba(255, 107, 107, 0.4);
+  border: none;
+  border-radius: 4px;
+  color: #ff6b6b;
+  cursor: pointer;
 }
 
-.list-enter-from,
-.list-leave-to {
-  opacity: 0;
-  transform: translateX(-30px);
+.delete-btn:hover {
+  background: rgba(255, 107, 107, 0.6);
 }
 
 .loading {

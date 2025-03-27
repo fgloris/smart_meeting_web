@@ -6,11 +6,16 @@ const props = defineProps<{
   duration?: number
 }>()
 
+const emit = defineEmits<{
+  (e: 'hide'): void
+}>()
+
 const isVisible = ref(true)
 
 onMounted(() => {
   setTimeout(() => {
     isVisible.value = false
+    emit('hide')
   }, props.duration || 1000)
 })
 </script>
@@ -29,7 +34,7 @@ onMounted(() => {
   top: 20px;
   left: 50%;
   transform: translateX(-50%);
-  background: rgba(0, 0, 0, 0.8);
+  background: rgba(0, 0, 0, 0.6);
   color: white;
   padding: 10px 20px;
   border-radius: 20px;

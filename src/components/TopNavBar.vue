@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import Toast from './Toast.vue'
 
@@ -8,6 +8,7 @@ const showLoginModal = ref(false)
 const isRegistering = ref(false)
 const toastMessage = ref('')
 const showToast = ref(false)
+const showUserMenu = ref(false)
 
 const showToastMessage = (message: string) => {
   toastMessage.value = message
@@ -15,36 +16,34 @@ const showToastMessage = (message: string) => {
 }
 
 const handleLogin = async () => {
-  const result = await authStore.login()
-  if (result.success) {
+  if (await authStore.login()) {
     showLoginModal.value = false
     showToastMessage(`欢迎回来，${authStore.user?.username}`)
   } else {
-    showToastMessage(result.error?.message || '登录失败')
+    showToastMessage(`登录失败，请检查邮箱地址或密码`)
   }
 }
 
 const handleLogout = () => {
   authStore.logout()
   showToastMessage('已退出登录')
+  showUserMenu.value = false
 }
 
 const handleVerify = async () => {
-  const result = await authStore.verify()
-  if (result.success) {
+  if (await authStore.verify()) {
     showToastMessage('验证码已发送')
   } else {
-    showToastMessage(result.error?.message || '验证码发送失败')
+    showToastMessage(`验证码发送失败，请稍后重试`)
   }
 }
 
 const handleRegister = async () => {
-  const result = await authStore.register()
-  if (result.success) {
+  if (await authStore.register()) {
     showLoginModal.value = false
     showToastMessage(`欢迎您，${authStore.user?.username}`)
   } else {
-    showToastMessage(result.error?.message || '注册失败')
+    showToastMessage(`注册失败，请检查验证码并稍后重试`)
   }
 }
 
@@ -56,6 +55,29 @@ const switchMode = () => {
   authStore.tempUserName = ''
   authStore.tempUserVerifyCode = ''
 }
+
+// 点击其他地方关闭用户菜单
+const handleClickOutside = (event: MouseEvent) => {
+  const userMenu = document.querySelector('.user-menu')
+  const avatar = document.querySelector('.avatar')
+  if (
+    userMenu &&
+    !userMenu.contains(event.target as Node) &&
+    avatar &&
+    !avatar.contains(event.target as Node)
+  ) {
+    showUserMenu.value = false
+  }
+}
+
+// 添加和移除点击事件监听器
+onMounted(() => {
+  document.addEventListener('click', handleClickOutside)
+})
+
+onUnmounted(() => {
+  document.removeEventListener('click', handleClickOutside)
+})
 </script>
 
 <template>
@@ -68,9 +90,33 @@ const switchMode = () => {
     <div class="nav-right">
       <div v-if="authStore.isAuthenticated" class="user-profile">
         <span class="username">{{ authStore.user?.useremail }}</span>
-        <div class="avatar">
+        <div class="avatar" @click="showUserMenu = !showUserMenu">
           {{ authStore.user?.username.charAt(0).toUpperCase() }}
         </div>
+
+        <!-- 用户信息菜单 -->
+        <div v-if="showUserMenu" class="user-menu">
+          <div class="user-info">
+            <div class="user-avatar">
+              {{ authStore.user?.username.charAt(0).toUpperCase() }}
+            </div>
+            <div class="user-details">
+              <div class="user-name">{{ authStore.user?.username }}</div>
+              <div class="user-email">{{ authStore.user?.useremail }}</div>
+            </div>
+          </div>
+          <div class="menu-divider"></div>
+          <div class="menu-actions">
+            <button class="menu-button" @click="showUserMenu = false">
+              <span>编辑资料</span>
+            </button>
+            <button class="menu-button logout" @click="handleLogout">
+              <span>退出登录</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- 用户登陆按钮，未登陆时显示 -->
       </div>
       <button v-else class="login-btn" @click="showLoginModal = true">登录</button>
     </div>
@@ -107,7 +153,7 @@ const switchMode = () => {
       </template>
     </div>
   </div>
-  <Toast v-if="showToast" :message="toastMessage" />
+  <Toast v-if="showToast" :message="toastMessage" @hide="showToast = false" />
 </template>
 
 <style scoped>
@@ -157,6 +203,7 @@ const switchMode = () => {
 }
 
 .user-profile {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 1rem;
@@ -164,6 +211,7 @@ const switchMode = () => {
 
 .username {
   color: white;
+  margin-right: 0.5rem;
 }
 
 .avatar {
@@ -293,5 +341,89 @@ const switchMode = () => {
 
 .modal-buttons-switchmode:hover {
   color: rgba(149, 128, 255, 1);
+}
+
+.user-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 10px;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border-radius: 12px;
+  padding: 16px;
+  min-width: 240px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.user-avatar {
+  width: 48px;
+  height: 48px;
+  background: #4caf50;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 20px;
+  color: white;
+}
+
+.user-details {
+  flex: 1;
+}
+
+.user-name {
+  font-weight: bold;
+  color: white;
+  margin-bottom: 4px;
+}
+
+.user-email {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.9em;
+}
+
+.menu-divider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.1);
+  margin: 8px 0;
+}
+
+.menu-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.menu-button {
+  background: transparent;
+  border: none;
+  color: white;
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  text-align: left;
+  transition: background-color 0.2s;
+}
+
+.menu-button:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.menu-button.logout {
+  color: #ff6b6b;
+}
+
+.menu-button.logout:hover {
+  background: rgba(255, 107, 107, 0.1);
 }
 </style>
