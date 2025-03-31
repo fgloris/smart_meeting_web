@@ -57,6 +57,12 @@ export interface Message {
   is_read: boolean
 }
 
+export interface FriendRequest {
+  user_id: number
+  username: string
+  useremail: string
+}
+
 export const login = async (useremail: string, userpassword: string) => {
   const response = await api.post('/api/user/login', { useremail, userpassword })
   return response.data
@@ -176,6 +182,53 @@ export const markAllAsRead = async (userId: number, friendId: number) => {
 
 export const deleteMessage = async (messageId: number) => {
   const response = await api.delete(`/api/message/${messageId}`)
+  return response.data
+}
+
+export const sendFriendRequest = async (userId: number, friendId: number) => {
+  const response = await api.post('/api/friendship/request', {
+    user_id: userId,
+    friend_id: friendId,
+  })
+  return response.data
+}
+
+export const acceptFriendRequest = async (userId: number, friendId: number) => {
+  const response = await api.put('/api/friendship/accept', {
+    user_id: userId,
+    friend_id: friendId,
+  })
+  return response.data
+}
+
+export const rejectFriendRequest = async (userId: number, friendId: number) => {
+  const response = await api.put('/api/friendship/reject', {
+    user_id: userId,
+    friend_id: friendId,
+  })
+  return response.data
+}
+
+export const getPendingRequests = async (userId: number) => {
+  const response = await api.get(`/api/friendship/pending/${userId}`)
+  return response.data
+}
+
+export const removeFriend = async (userId: number, friendId: number) => {
+  const response = await api.delete('/api/friendship/remove', {
+    data: {
+      user_id: userId,
+      friend_id: friendId,
+    },
+  })
+  return response.data
+}
+
+export const quickAddFriends = async (userId: number, meetingId: number) => {
+  const response = await api.post('/api/friendship/quick-add', {
+    user_id: userId,
+    meeting_id: meetingId,
+  })
   return response.data
 }
 

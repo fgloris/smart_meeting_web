@@ -7,8 +7,13 @@ import {
   sendMessage,
   getUnreadMessages,
   markAllAsRead,
+  sendFriendRequest,
+  getPendingRequests,
+  acceptFriendRequest,
+  rejectFriendRequest,
   type Friend,
   type Message,
+  type FriendRequest,
 } from '@/services/api'
 
 const authStore = useAuthStore()
@@ -18,6 +23,10 @@ const messages = ref<Message[]>([])
 const newMessage = ref('')
 const loading = ref(false)
 const unreadCounts = ref<{ [key: number]: number }>({})
+const showAddFriendModal = ref(false)
+const newFriendEmail = ref('')
+const pendingRequests = ref<FriendRequest[]>([])
+const showPendingRequests = ref(false)
 
 // 获取好友列表
 const fetchFriends = async () => {
@@ -32,6 +41,9 @@ const fetchFriends = async () => {
     friends.value = response.friends
     console.info('好友列表数据:', friends.value)
     // 获取每个好友的未读消息数
+    for (const friend of friends.value) {
+      console.info('获取好友列表，好友', friend.nickname)
+    }
     for (const friend of friends.value) {
       console.info('获取好友未读消息数，好友ID:', friend.user_id)
       const unread = await getUnreadMessages(authStore.user!.uid)
@@ -100,28 +112,97 @@ const selectFriend = async (friend: Friend) => {
   await fetchChatHistory(friend.user_id)
 }
 
-// 定期检查未读消息
+// 定期检查未读消息和好友列表
 let checkInterval: number | null = null
 const startCheckingUnread = () => {
-  console.info('开始定期检查未读消息')
+  console.info('开始定期检查未读消息和好友列表')
   checkInterval = window.setInterval(async () => {
     if (!authStore.user?.uid) {
-      console.error('检查未读消息失败：用户未登录')
+      console.error('检查失败：用户未登录')
       return
     }
-    console.info('检查未读消息，用户ID:', authStore.user.uid)
+    console.info('定期检查，用户ID:', authStore.user.uid)
+
+    // 获取好友列表
+    try {
+      console.info('开始更新好友列表')
+      await fetchFriends()
+      for (const friend of friends.value) {
+        console.info('好友id:', friend.user_id)
+      }
+    } catch (error) {
+      console.error('更新好友列表失败:', error)
+    }
+
+    // 获取待处理的好友请求
+    try {
+      console.info('开始更新待处理好友请求')
+      await fetchPendingRequests()
+      console.info('待处理好友请求更新成功')
+    } catch (error) {
+      console.error('更新待处理好友请求失败:', error)
+    }
+
+    // 检查未读消息
     for (const friend of friends.value) {
       console.info('检查好友未读消息，好友ID:', friend.user_id)
-      const unread = await getUnreadMessages(authStore.user.uid)
-      console.info('好友未读消息数:', unread)
-      unreadCounts.value[friend.user_id] = unread.count
+      try {
+        const unread = await getUnreadMessages(authStore.user.uid)
+        console.info('好友未读消息数:', unread)
+        unreadCounts.value[friend.user_id] = unread.count
+      } catch (error) {
+        console.error('检查未读消息失败:', error)
+      }
     }
   }, 5000) // 每5秒检查一次
+}
+
+// 获取待处理的好友请求
+const fetchPendingRequests = async () => {
+  if (!authStore.user?.uid) return
+  try {
+    const response = await getPendingRequests(authStore.user.uid)
+    pendingRequests.value = response.requests
+  } catch (error) {
+    console.error('获取待处理好友请求失败:', error)
+  }
+}
+
+// 处理好友请求
+const handleFriendRequest = async (request: FriendRequest, accept: boolean) => {
+  if (!authStore.user?.uid) return
+  try {
+    console.info('处理好友请求:', { request, accept })
+    if (accept) {
+      await acceptFriendRequest(authStore.user.uid, request.user_id)
+      console.info('接受好友请求成功')
+    } else {
+      await rejectFriendRequest(authStore.user.uid, request.user_id)
+      console.info('拒绝好友请求成功')
+    }
+    await fetchPendingRequests()
+    await fetchFriends()
+  } catch (error) {
+    console.error('处理好友请求失败:', error)
+  }
+}
+
+// 发送好友请求
+const handleAddFriend = async () => {
+  if (!authStore.user?.uid || !newFriendEmail.value.trim()) return
+  try {
+    await sendFriendRequest(authStore.user.uid, parseInt(newFriendEmail.value))
+    newFriendEmail.value = ''
+    showAddFriendModal.value = false
+  } catch (error) {
+    console.error('发送好友请求失败:', error)
+  }
 }
 
 onMounted(() => {
   console.info('Chat组件已挂载')
   fetchFriends()
+  fetchPendingRequests()
   startCheckingUnread()
 })
 
@@ -138,7 +219,36 @@ onUnmounted(() => {
     <div class="chat-container">
       <!-- 好友列表 -->
       <div class="friends-list">
-        <h2>好友列表</h2>
+        <div class="friends-header">
+          <h2>好友列表</h2>
+          <div class="friends-actions">
+            <button class="add-friend-btn" @click="showAddFriendModal = true">
+              <unicon name="plus" fill="#9580FF"></unicon>
+            </button>
+            <button
+              class="pending-requests-btn"
+              @click="showPendingRequests = !showPendingRequests"
+            >
+              <unicon name="bell" fill="#9580FF"></unicon>
+              <span v-if="pendingRequests.length" class="notification-badge">
+                {{ pendingRequests.length }}
+              </span>
+            </button>
+          </div>
+        </div>
+
+        <!-- 待处理的好友请求 -->
+        <div v-if="showPendingRequests && pendingRequests.length > 0" class="pending-requests">
+          <h3>待处理的好友请求</h3>
+          <div v-for="request in pendingRequests" :key="request.user_id" class="request-item">
+            <span>{{ request.username }} ({{ request.useremail }}) 请求添加您为好友</span>
+            <div class="request-actions">
+              <button @click="handleFriendRequest(request, true)" class="accept-btn">接受</button>
+              <button @click="handleFriendRequest(request, false)" class="reject-btn">拒绝</button>
+            </div>
+          </div>
+        </div>
+
         <div class="friends">
           <div
             v-for="friend in friends"
@@ -148,7 +258,7 @@ onUnmounted(() => {
             @click="selectFriend(friend)"
           >
             <div class="friend-avatar">
-              <img :src="friend.avatar" :alt="friend.nickname" />
+              {{ friend.nickname.charAt(0).toUpperCase() }}
             </div>
             <div class="friend-info">
               <span class="friend-name">{{ friend.nickname }}</span>
@@ -197,6 +307,25 @@ onUnmounted(() => {
         </div>
       </div>
     </div>
+
+    <!-- 添加好友弹窗 -->
+    <div v-if="showAddFriendModal" class="modal-overlay" @click="showAddFriendModal = false">
+      <div class="modal-content" @click.stop>
+        <h3>添加好友</h3>
+        <div class="modal-body">
+          <input
+            v-model="newFriendEmail"
+            type="text"
+            placeholder="请输入好友的用户ID"
+            @keyup.enter="handleAddFriend"
+          />
+          <div class="modal-actions">
+            <button @click="showAddFriendModal = false">取消</button>
+            <button @click="handleAddFriend">发送请求</button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -217,7 +346,7 @@ onUnmounted(() => {
 }
 
 .friends-list {
-  width: 200px;
+  width: 250px;
   border-right: 1px solid rgba(255, 255, 255, 0.1);
   display: flex;
   flex-direction: column;
@@ -226,7 +355,80 @@ onUnmounted(() => {
 .friends-list h2 {
   padding: 1rem;
   margin: 0;
+}
+
+.friends-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.friends-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.add-friend-btn,
+.pending-requests-btn {
+  background: none;
+  border: none;
+  color: white;
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 4px;
+  transition: background-color 0.3s;
+}
+
+.add-friend-btn:hover,
+.pending-requests-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.pending-requests {
+  padding: 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.pending-requests h3 {
+  margin: 0 0 1rem 0;
+  font-size: 1rem;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.request-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 4px;
+  margin-bottom: 0.5rem;
+}
+
+.request-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.accept-btn,
+.reject-btn {
+  padding: 0.2rem 0.5rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.8rem;
+}
+
+.accept-btn {
+  background: rgba(149, 128, 255, 0.6);
+  color: white;
+}
+
+.reject-btn {
+  background: rgba(255, 107, 107, 0.6);
+  color: white;
 }
 
 .friends {
@@ -379,5 +581,86 @@ onUnmounted(() => {
   text-align: center;
   padding: 2rem;
   color: rgba(255, 255, 255, 0.6);
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border-radius: 8px;
+  padding: 1.5rem;
+  min-width: 300px;
+}
+
+.modal-content h3 {
+  margin: 0 0 1rem 0;
+  color: white;
+}
+
+.modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.modal-body input {
+  padding: 0.5rem;
+  border: none;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+}
+
+.modal-body input:focus {
+  outline: none;
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+.modal-actions button {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.modal-actions button:first-child {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+}
+
+.modal-actions button:last-child {
+  background: rgba(149, 128, 255, 0.6);
+  color: white;
+}
+
+.notification-badge {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  background: #ff6b6b;
+  color: white;
+  font-size: 0.7rem;
+  padding: 0.1rem 0.3rem;
+  border-radius: 10px;
+  min-width: 18px;
+  text-align: center;
 }
 </style>
