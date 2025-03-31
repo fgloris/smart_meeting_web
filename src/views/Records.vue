@@ -7,9 +7,11 @@ import {
   uploadMeetingFile,
   downloadMeetingFile,
   deleteMeetingFile,
+  deleteMeeting,
   type Meeting,
   type MeetingFile,
 } from '@/services/api'
+import CreateMeetingModal from '@/components/CreateMeetingModal.vue'
 
 interface MeetingWithFiles extends Meeting {
   files: MeetingFile[]
@@ -19,6 +21,8 @@ const authStore = useAuthStore()
 const meetings = ref<MeetingWithFiles[]>([])
 const loading = ref(true)
 const fileInputs = ref<{ [key: number]: HTMLInputElement | null }>({})
+const showCreateModal = ref(false)
+const showDropdown = ref<number | null>(null)
 
 // 获取所有会议和文件
 const fetchMeetingsAndFiles = async () => {
@@ -149,10 +153,36 @@ const handleDelete = async (file: MeetingFile) => {
   }
 }
 
+const toggleDropdown = (meetingId: number) => {
+  showDropdown.value = showDropdown.value === meetingId ? null : meetingId
+}
+
+const handleDeleteMeeting = async (meetingId: number) => {
+  if (!confirm('确定要删除这个会议吗？')) {
+    return
+  }
+
+  try {
+    await deleteMeeting(meetingId)
+    await fetchMeetingsAndFiles()
+  } catch (error) {
+    console.error('删除会议失败:', error)
+  }
+}
+
+const handleInviteMember = (meetingId: number) => {
+  // TODO: 实现邀请成员功能
+  console.log('邀请成员', meetingId)
+}
+
 const formatFileSize = (size: number) => {
   if (size < 1024) return size + ' B'
   if (size < 1024 * 1024) return (size / 1024).toFixed(1) + ' KB'
   return (size / (1024 * 1024)).toFixed(1) + ' MB'
+}
+
+const handleCreateSuccess = () => {
+  fetchMeetingsAndFiles()
 }
 
 onMounted(() => {
@@ -164,7 +194,10 @@ onMounted(() => {
   <div class="records-page">
     <div class="header">
       <h1>会议文件</h1>
+      <button class="create-meeting-btn" @click="showCreateModal = true">创建会议</button>
     </div>
+
+    <CreateMeetingModal v-model="showCreateModal" @refresh="handleCreateSuccess" />
 
     <div v-if="loading" class="loading">加载中...</div>
     <div v-else class="meetings-container">
@@ -179,6 +212,22 @@ onMounted(() => {
             </div>
           </div>
           <div class="meeting-actions">
+            <div class="dropdown-container">
+              <button class="menu-btn" @click="toggleDropdown(meeting.id)">
+                <span class="menu-icon">☰</span>
+              </button>
+              <div v-if="showDropdown === meeting.id" class="dropdown-menu">
+                <button class="dropdown-item" @click="handleUpload(meeting.id)">
+                  <span class="icon">📤</span> 上传文件
+                </button>
+                <button class="dropdown-item" @click="handleInviteMember(meeting.id)">
+                  <span class="icon">👥</span> 邀请成员
+                </button>
+                <button class="dropdown-item delete" @click="handleDeleteMeeting(meeting.id)">
+                  <span class="icon">🗑️</span> 删除会议
+                </button>
+              </div>
+            </div>
             <input
               :ref="
                 (el) => {
@@ -191,7 +240,6 @@ onMounted(() => {
               style="display: none"
               accept=".ppt, .pptx, .xls, .xlsx, .png, .doc, .docx, .mp3, .mp4, .pdf, .txt, .jpg, .jpeg, .png, .gif, .zip, .rar"
             />
-            <button class="upload-btn" @click="handleUpload(meeting.id)">上传文件</button>
           </div>
         </div>
 
@@ -228,6 +276,9 @@ onMounted(() => {
 
 .header {
   margin-bottom: 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .meetings-container {
@@ -269,6 +320,69 @@ onMounted(() => {
 
 .meeting-actions {
   margin-left: 1rem;
+}
+
+.dropdown-container {
+  position: relative;
+}
+
+.menu-btn {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 4px;
+  transition: background-color 0.3s;
+}
+
+.menu-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border-radius: 8px;
+  padding: 0.5rem;
+  min-width: 150px;
+  z-index: 1000;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.5rem 1rem;
+  border: none;
+  background: none;
+  color: white;
+  cursor: pointer;
+  text-align: left;
+  border-radius: 4px;
+  transition: background-color 0.3s;
+}
+
+.dropdown-item:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.dropdown-item.delete {
+  color: #ff6b6b;
+}
+
+.dropdown-item.delete:hover {
+  background: rgba(255, 107, 107, 0.1);
+}
+
+.icon {
+  font-size: 1.2rem;
 }
 
 .upload-btn {
@@ -370,5 +484,19 @@ onMounted(() => {
   text-align: center;
   padding: 2rem;
   color: rgba(255, 255, 255, 0.6);
+}
+
+.create-meeting-btn {
+  padding: 0.5rem 1rem;
+  background: rgba(149, 128, 255, 0.6);
+  border: none;
+  border-radius: 4px;
+  color: white;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.create-meeting-btn:hover {
+  background: rgba(149, 128, 255, 0.8);
 }
 </style>

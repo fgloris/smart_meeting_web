@@ -16,6 +16,14 @@ export interface Meeting {
   meetingtime: string
 }
 
+export interface CreateMeetingData {
+  meetingid: number
+  meetingname: string
+  meetinglocation: string
+  meetingtime: string
+  meetingmembers: number[]
+}
+
 export interface MeetingFile {
   description: string
   file_name: string
@@ -101,6 +109,16 @@ export const downloadMeetingFile = async (filePath: string) => {
 
 export const deleteMeetingFile = async (fileId: number) => {
   const response = await api.delete(`/api/meeting/file/${fileId}`)
+  return response.data
+}
+
+export const createMeeting = async (meetingData: CreateMeetingData) => {
+  const response = await api.post('/api/meeting/create', meetingData)
+  return response.data
+}
+
+export const deleteMeeting = async (meetingId: number) => {
+  const response = await api.delete(`/api/meeting/${meetingId}`)
   return response.data
 }
 
