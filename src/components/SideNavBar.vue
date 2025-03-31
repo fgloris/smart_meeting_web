@@ -1,12 +1,11 @@
-<script setup lang="ts">
-</script>
+<script setup lang="ts"></script>
 
 <template>
   <nav class="navbar">
     <div class="nav-left">
-      <router-link to="/ability/records" class="nav-link first":key="1">会议记录</router-link>
-      <router-link to="/ability/stream" class="nav-link second":key="2">直播开会</router-link>
-      <router-link to="/ability/chat" class="nav-link third":key="3">ai助手</router-link>
+      <router-link to="/ability/records" class="nav-link first" :key="1">会议记录</router-link>
+      <router-link to="/ability/stream" class="nav-link second" :key="2">直播开会</router-link>
+      <router-link to="/ability/chat" class="nav-link third" :key="3">聊天</router-link>
     </div>
   </nav>
 </template>
@@ -22,14 +21,14 @@
   justify-content: space-between;
   padding: 1rem 1rem;
   background: transparent;
-  background: linear-gradient(to bottom, 
+  background: linear-gradient(
+    to bottom,
     rgba(200, 200, 200, 0.25) 0%,
     rgba(200, 200, 200, 0.25) 10%,
     rgba(200, 200, 200, 0.15) 60%,
-    rgba(200, 200, 200, 0.0) 100%
+    rgba(200, 200, 200, 0) 100%
   );
   border-top-right-radius: 20px;
-
 }
 
 .nav-left {

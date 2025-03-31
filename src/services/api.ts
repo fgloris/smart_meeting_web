@@ -92,4 +92,16 @@ export const uploadMeetingFile = async (
   return response.data
 }
 
+export const downloadMeetingFile = async (filePath: string) => {
+  const response = await api.get(`/api/file/download/${filePath}`, {
+    responseType: 'blob',
+  })
+  return response.data
+}
+
+export const deleteMeetingFile = async (fileId: number) => {
+  const response = await api.delete(`/api/meeting/file/${fileId}`)
+  return response.data
+}
+
 export default api

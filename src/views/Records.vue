@@ -5,6 +5,8 @@ import {
   getMeetings,
   getMeetingFiles,
   uploadMeetingFile,
+  downloadMeetingFile,
+  deleteMeetingFile,
   type Meeting,
   type MeetingFile,
 } from '@/services/api'
@@ -117,14 +119,34 @@ const handleFileSelect = async (event: Event, meetingId: number) => {
   }
 }
 
-const handleDownload = (file: MeetingFile) => {
-  // TODO: 实现文件下载功能
-  console.log('downloading...', file.file_name)
+const handleDownload = async (file: MeetingFile) => {
+  try {
+    const blob = await downloadMeetingFile(file.file_path)
+    const url = window.URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = file.file_name
+    document.body.appendChild(a)
+    a.click()
+    window.URL.revokeObjectURL(url)
+    document.body.removeChild(a)
+  } catch (error) {
+    console.error('文件下载失败:', error)
+  }
 }
 
-const handleDelete = (file: MeetingFile) => {
-  // TODO: 实现文件删除功能
-  console.log('deleting...', file.file_name)
+const handleDelete = async (file: MeetingFile) => {
+  if (!confirm('确定要删除这个文件吗？')) {
+    return
+  }
+
+  try {
+    await deleteMeetingFile(file.id)
+    // 刷新文件列表
+    await fetchMeetingsAndFiles()
+  } catch (error) {
+    console.error('文件删除失败:', error)
+  }
 }
 
 const formatFileSize = (size: number) => {
