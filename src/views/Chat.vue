@@ -42,9 +42,6 @@ const fetchFriends = async () => {
     console.info('好友列表数据:', friends.value)
     // 获取每个好友的未读消息数
     for (const friend of friends.value) {
-      console.info('获取好友列表，好友', friend.nickname)
-    }
-    for (const friend of friends.value) {
       console.info('获取好友未读消息数，好友ID:', friend.user_id)
       const unread = await getUnreadMessages(authStore.user!.uid)
       console.info('好友未读消息数:', unread)
@@ -112,47 +109,21 @@ const selectFriend = async (friend: Friend) => {
   await fetchChatHistory(friend.user_id)
 }
 
-// 定期检查未读消息和好友列表
+// 定期检查未读消息
 let checkInterval: number | null = null
 const startCheckingUnread = () => {
-  console.info('开始定期检查未读消息和好友列表')
+  console.info('开始定期检查未读消息')
   checkInterval = window.setInterval(async () => {
     if (!authStore.user?.uid) {
-      console.error('检查失败：用户未登录')
+      console.error('检查未读消息失败：用户未登录')
       return
     }
-    console.info('定期检查，用户ID:', authStore.user.uid)
-
-    // 获取好友列表
-    try {
-      console.info('开始更新好友列表')
-      await fetchFriends()
-      for (const friend of friends.value) {
-        console.info('好友id:', friend.user_id)
-      }
-    } catch (error) {
-      console.error('更新好友列表失败:', error)
-    }
-
-    // 获取待处理的好友请求
-    try {
-      console.info('开始更新待处理好友请求')
-      await fetchPendingRequests()
-      console.info('待处理好友请求更新成功')
-    } catch (error) {
-      console.error('更新待处理好友请求失败:', error)
-    }
-
-    // 检查未读消息
+    console.info('检查未读消息，用户ID:', authStore.user.uid)
     for (const friend of friends.value) {
       console.info('检查好友未读消息，好友ID:', friend.user_id)
-      try {
-        const unread = await getUnreadMessages(authStore.user.uid)
-        console.info('好友未读消息数:', unread)
-        unreadCounts.value[friend.user_id] = unread.count
-      } catch (error) {
-        console.error('检查未读消息失败:', error)
-      }
+      const unread = await getUnreadMessages(authStore.user.uid)
+      console.info('好友未读消息数:', unread)
+      unreadCounts.value[friend.user_id] = unread.count
     }
   }, 5000) // 每5秒检查一次
 }
@@ -162,7 +133,10 @@ const fetchPendingRequests = async () => {
   if (!authStore.user?.uid) return
   try {
     const response = await getPendingRequests(authStore.user.uid)
-    pendingRequests.value = response.requests
+    pendingRequests.value = []
+    for (const request of response.requests) {
+      pendingRequests.value.push({ friend_id: request.uid, friend_email: request.useremail })
+    }
   } catch (error) {
     console.error('获取待处理好友请求失败:', error)
   }
@@ -171,14 +145,12 @@ const fetchPendingRequests = async () => {
 // 处理好友请求
 const handleFriendRequest = async (request: FriendRequest, accept: boolean) => {
   if (!authStore.user?.uid) return
+  console.info('处理好友请求 request:', request)
   try {
-    console.info('处理好友请求:', { request, accept })
     if (accept) {
-      await acceptFriendRequest(authStore.user.uid, request.user_id)
-      console.info('接受好友请求成功')
+      await acceptFriendRequest(authStore.user.uid, request.friend_id)
     } else {
-      await rejectFriendRequest(authStore.user.uid, request.user_id)
-      console.info('拒绝好友请求成功')
+      await rejectFriendRequest(authStore.user.uid, request.friend_id)
     }
     await fetchPendingRequests()
     await fetchFriends()
@@ -240,8 +212,8 @@ onUnmounted(() => {
         <!-- 待处理的好友请求 -->
         <div v-if="showPendingRequests && pendingRequests.length > 0" class="pending-requests">
           <h3>待处理的好友请求</h3>
-          <div v-for="request in pendingRequests" :key="request.user_id" class="request-item">
-            <span>{{ request.username }} ({{ request.useremail }}) 请求添加您为好友</span>
+          <div v-for="request in pendingRequests" :key="request.friend_id" class="request-item">
+            <span>用户 {{ request.friend_email }} 请求添加您为好友</span>
             <div class="request-actions">
               <button @click="handleFriendRequest(request, true)" class="accept-btn">接受</button>
               <button @click="handleFriendRequest(request, false)" class="reject-btn">拒绝</button>
@@ -258,7 +230,7 @@ onUnmounted(() => {
             @click="selectFriend(friend)"
           >
             <div class="friend-avatar">
-              {{ friend.nickname.charAt(0).toUpperCase() }}
+              {{ authStore.user?.username.charAt(0).toUpperCase() }}
             </div>
             <div class="friend-info">
               <span class="friend-name">{{ friend.nickname }}</span>

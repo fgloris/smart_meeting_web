@@ -58,9 +58,8 @@ export interface Message {
 }
 
 export interface FriendRequest {
-  user_id: number
-  username: string
-  useremail: string
+  friend_id: number
+  friend_email: string
 }
 
 export const login = async (useremail: string, userpassword: string) => {
@@ -194,6 +193,7 @@ export const sendFriendRequest = async (userId: number, friendId: number) => {
 }
 
 export const acceptFriendRequest = async (userId: number, friendId: number) => {
+  console.log('acceptFriendRequest', { userId, friendId })
   const response = await api.put('/api/friendship/accept', {
     user_id: userId,
     friend_id: friendId,
@@ -211,6 +211,7 @@ export const rejectFriendRequest = async (userId: number, friendId: number) => {
 
 export const getPendingRequests = async (userId: number) => {
   const response = await api.get(`/api/friendship/pending/${userId}`)
+  console.log('getPendingRequests', response.data)
   return response.data
 }
 
