@@ -218,13 +218,13 @@ onMounted(() => {
               </button>
               <div v-if="showDropdown === meeting.id" class="dropdown-menu">
                 <button class="dropdown-item" @click="handleUpload(meeting.id)">
-                  <span class="icon">📤</span> 上传文件
+                  <unicon name="upload" fill="#9580FF"></unicon> 上传文件
                 </button>
                 <button class="dropdown-item" @click="handleInviteMember(meeting.id)">
-                  <span class="icon">👥</span> 邀请成员
+                  <unicon name="users-alt" fill="#9580FF"></unicon> 邀请成员
                 </button>
                 <button class="dropdown-item delete" @click="handleDeleteMeeting(meeting.id)">
-                  <span class="icon">🗑️</span> 删除会议
+                  <unicon name="trash-alt" fill="#9580FF"></unicon> 删除会议
                 </button>
               </div>
             </div>
@@ -345,7 +345,7 @@ onMounted(() => {
   position: absolute;
   top: 100%;
   right: 0;
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.3);
   backdrop-filter: blur(10px);
   border-radius: 8px;
   padding: 0.5rem;

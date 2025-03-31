@@ -42,6 +42,21 @@ export interface MeetingFilesResponse {
   meeting_id: number
 }
 
+export interface Friend {
+  user_id: number
+  nickname: string
+  avatar: string
+}
+
+export interface Message {
+  id: number
+  sender_id: number
+  receiver_id: number
+  content: string
+  created_at: string
+  is_read: boolean
+}
+
 export const login = async (useremail: string, userpassword: string) => {
   const response = await api.post('/api/user/login', { useremail, userpassword })
   return response.data
@@ -119,6 +134,48 @@ export const createMeeting = async (meetingData: CreateMeetingData) => {
 
 export const deleteMeeting = async (meetingId: number) => {
   const response = await api.delete(`/api/meeting/${meetingId}`)
+  return response.data
+}
+
+export const getFriends = async (userId: number) => {
+  const response = await api.get(`/api/friendship/friends/${userId}`)
+  return response.data
+}
+
+export const getChatHistory = async (userId: number, friendId: number) => {
+  const response = await api.get(`/api/message/history/${userId}/${friendId}`)
+  return response.data
+}
+
+export const sendMessage = async (senderId: number, receiverId: number, content: string) => {
+  const response = await api.post('/api/message', {
+    sender_id: senderId,
+    receiver_id: receiverId,
+    content: content,
+  })
+  return response.data
+}
+
+export const getUnreadMessages = async (userId: number) => {
+  const response = await api.get(`/api/message/unread/${userId}`)
+  return response.data
+}
+
+export const markMessageAsRead = async (messageId: number) => {
+  const response = await api.put(`/api/message/read/${messageId}`)
+  return response.data
+}
+
+export const markAllAsRead = async (userId: number, friendId: number) => {
+  const response = await api.put('/api/message/read-all', {
+    user_id: userId,
+    friend_id: friendId,
+  })
+  return response.data
+}
+
+export const deleteMessage = async (messageId: number) => {
+  const response = await api.delete(`/api/message/${messageId}`)
   return response.data
 }
 
