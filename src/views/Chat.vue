@@ -17,8 +17,8 @@ import {
 } from '@/services/api'
 
 const authStore = useAuthStore()
-const friends = ref<Friend[]>([])
-const currentFriend = ref<Friend | null>(null)
+const friends = ref<FriendRequest[]>([])
+const currentFriend = ref<FriendRequest | null>(null)
 const messages = ref<Message[]>([])
 const newMessage = ref('')
 const loading = ref(false)
@@ -38,14 +38,21 @@ const fetchFriends = async () => {
   try {
     const response = await getFriends(authStore.user.uid)
     console.info('获取好友列表成功:', response)
-    friends.value = response.friends
+    friends.value = []
+    for (const friend of response.friends) {
+      friends.value.push({
+        friend_id: friend.uid,
+        friend_name: friend.username,
+        friend_email: friend.useremail,
+      })
+    }
     console.info('好友列表数据:', friends.value)
     // 获取每个好友的未读消息数
     for (const friend of friends.value) {
-      console.info('获取好友未读消息数，好友ID:', friend.user_id)
+      console.info('获取好友未读消息数，好友ID:', friend.friend_id)
       const unread = await getUnreadMessages(authStore.user!.uid)
       console.info('好友未读消息数:', unread)
-      unreadCounts.value[friend.user_id] = unread.count
+      unreadCounts.value[friend.friend_id] = unread.count
     }
   } catch (error) {
     console.error('获取好友列表失败:', error)
@@ -87,26 +94,26 @@ const handleSendMessage = async () => {
     '开始发送消息，发送者ID:',
     authStore.user.uid,
     '接收者ID:',
-    currentFriend.value.user_id,
+    currentFriend.value.friend_id,
   )
 
   try {
-    await sendMessage(authStore.user.uid, currentFriend.value.user_id, newMessage.value)
+    await sendMessage(authStore.user.uid, currentFriend.value.friend_id, newMessage.value)
     console.info('发送消息成功')
     newMessage.value = ''
     // 重新获取聊天记录
     console.info('重新获取聊天记录')
-    await fetchChatHistory(currentFriend.value.user_id)
+    await fetchChatHistory(currentFriend.value.friend_id)
   } catch (error) {
     console.error('发送消息失败:', error)
   }
 }
 
 // 选择好友
-const selectFriend = async (friend: Friend) => {
+const selectFriend = async (friend: FriendRequest) => {
   console.info('选择好友:', friend)
   currentFriend.value = friend
-  await fetchChatHistory(friend.user_id)
+  await fetchChatHistory(friend.friend_id)
 }
 
 // 定期检查未读消息
@@ -120,10 +127,10 @@ const startCheckingUnread = () => {
     }
     console.info('检查未读消息，用户ID:', authStore.user.uid)
     for (const friend of friends.value) {
-      console.info('检查好友未读消息，好友ID:', friend.user_id)
+      console.info('检查好友未读消息，好友ID:', friend.friend_id)
       const unread = await getUnreadMessages(authStore.user.uid)
       console.info('好友未读消息数:', unread)
-      unreadCounts.value[friend.user_id] = unread.count
+      unreadCounts.value[friend.friend_id] = unread.count
     }
   }, 5000) // 每5秒检查一次
 }
@@ -135,7 +142,11 @@ const fetchPendingRequests = async () => {
     const response = await getPendingRequests(authStore.user.uid)
     pendingRequests.value = []
     for (const request of response.requests) {
-      pendingRequests.value.push({ friend_id: request.uid, friend_email: request.useremail })
+      pendingRequests.value.push({
+        friend_id: request.uid,
+        friend_name: request.username,
+        friend_email: request.useremail,
+      })
     }
   } catch (error) {
     console.error('获取待处理好友请求失败:', error)
@@ -213,7 +224,12 @@ onUnmounted(() => {
         <div v-if="showPendingRequests && pendingRequests.length > 0" class="pending-requests">
           <h3>待处理的好友请求</h3>
           <div v-for="request in pendingRequests" :key="request.friend_id" class="request-item">
-            <span>用户 {{ request.friend_email }} 请求添加您为好友</span>
+            <div class="request-user">
+              <div class="friend-avatar">
+                {{ request.friend_name.charAt(0).toUpperCase() }}
+              </div>
+              <span>用户 {{ request.friend_email }} 请求添加您为好友</span>
+            </div>
             <div class="request-actions">
               <button @click="handleFriendRequest(request, true)" class="accept-btn">接受</button>
               <button @click="handleFriendRequest(request, false)" class="reject-btn">拒绝</button>
@@ -224,18 +240,18 @@ onUnmounted(() => {
         <div class="friends">
           <div
             v-for="friend in friends"
-            :key="friend.user_id"
+            :key="friend.friend_id"
             class="friend-item"
-            :class="{ active: currentFriend?.user_id === friend.user_id }"
+            :class="{ active: currentFriend?.friend_id === friend.friend_id }"
             @click="selectFriend(friend)"
           >
             <div class="friend-avatar">
-              {{ authStore.user?.username.charAt(0).toUpperCase() }}
+              {{ friend.friend_name.charAt(0).toUpperCase() }}
             </div>
             <div class="friend-info">
-              <span class="friend-name">{{ friend.nickname }}</span>
-              <span v-if="unreadCounts[friend.user_id]" class="unread-count">
-                {{ unreadCounts[friend.user_id] }}
+              <span class="friend-name">{{ friend.friend_name }}</span>
+              <span v-if="unreadCounts[friend.friend_id]" class="unread-count">
+                {{ unreadCounts[friend.friend_id] }}
               </span>
             </div>
           </div>
@@ -245,7 +261,7 @@ onUnmounted(() => {
       <!-- 聊天窗口 -->
       <div class="chat-window">
         <div v-if="currentFriend" class="chat-header">
-          <h3>{{ currentFriend.nickname }}</h3>
+          <h3>{{ currentFriend.friend_name }}</h3>
         </div>
         <div v-else class="no-chat-selected">
           <p>请选择一个好友开始聊天</p>
@@ -428,14 +444,14 @@ onUnmounted(() => {
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  overflow: hidden;
+  background: rgba(149, 128, 255, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 1.2rem;
+  color: white;
   margin-right: 1rem;
-}
-
-.friend-avatar img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
 }
 
 .friend-info {
@@ -634,5 +650,11 @@ onUnmounted(() => {
   border-radius: 10px;
   min-width: 18px;
   text-align: center;
+}
+
+.request-user {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 </style>

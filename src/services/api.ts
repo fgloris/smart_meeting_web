@@ -45,7 +45,6 @@ export interface MeetingFilesResponse {
 export interface Friend {
   user_id: number
   nickname: string
-  avatar: string
 }
 
 export interface Message {
@@ -59,6 +58,7 @@ export interface Message {
 
 export interface FriendRequest {
   friend_id: number
+  friend_name: string
   friend_email: string
 }
 
