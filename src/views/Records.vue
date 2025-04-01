@@ -51,7 +51,6 @@ const fetchMeetingsAndFiles = async () => {
 }
 
 const handleUpload = (meetingId: number) => {
-  console.info('点击上传按钮，meetingId:', meetingId)
   console.info('当前登录状态:', authStore.isAuthenticated)
   console.info('当前用户信息:', authStore.user)
 

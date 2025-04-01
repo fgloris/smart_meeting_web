@@ -323,6 +323,7 @@ onUnmounted(() => {
   padding: 2rem;
   color: white;
   margin-left: 6%;
+  margin-right: 2%;
 }
 
 .chat-container {

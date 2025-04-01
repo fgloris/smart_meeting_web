@@ -22,6 +22,7 @@ const authStore = useAuthStore()
         </RouterView>
       </div>
       <div v-else class="login-message">请先登录</div>
+      <div class="spacer"></div>
       <AboutSection />
     </div>
   </div>
@@ -54,5 +55,8 @@ const authStore = useAuthStore()
   text-align: center;
   margin-top: 4%;
   font-size: 2rem;
+}
+.spacer {
+  height: 500px;
 }
 </style>

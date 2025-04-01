@@ -14,7 +14,7 @@ const emit = defineEmits<{
 
 const authStore = useAuthStore()
 const newMeeting = ref<CreateMeetingData>({
-  meetingid: 0,
+  meetingid: 1,
   meetingname: '',
   meetinglocation: '',
   meetingtime: '',
@@ -29,7 +29,6 @@ const handleCreateMeeting = async () => {
 
   // 验证必填字段
   if (
-    !newMeeting.value.meetingid ||
     !newMeeting.value.meetingname ||
     !newMeeting.value.meetinglocation ||
     !newMeeting.value.meetingtime
@@ -55,7 +54,7 @@ const handleCreateMeeting = async () => {
 
     // 重置表单
     newMeeting.value = {
-      meetingid: 0,
+      meetingid: 1,
       meetingname: '',
       meetinglocation: '',
       meetingtime: '',
@@ -76,15 +75,6 @@ const handleCreateMeeting = async () => {
   <div v-if="modelValue" class="modal-overlay">
     <div class="modal">
       <h2>新建会议</h2>
-      <div class="form-group">
-        <input
-          v-model.number="newMeeting.meetingid"
-          type="number"
-          placeholder="会议ID"
-          class="form-input"
-          required
-        />
-      </div>
       <div class="form-group">
         <input
           v-model="newMeeting.meetingname"
