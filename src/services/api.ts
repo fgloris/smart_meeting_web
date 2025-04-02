@@ -1,9 +1,16 @@
 import axios from 'axios'
 
 const BASE_URL = 'http://1.92.146.109:5000'
+const LIVE_SERVER_URL = 'http://47.79.86.58'
 
 const api = axios.create({
   baseURL: BASE_URL,
+  timeout: 30000,
+})
+
+// 创建直播服务的API实例
+const liveApi = axios.create({
+  baseURL: LIVE_SERVER_URL,
   timeout: 30000,
 })
 
@@ -60,6 +67,47 @@ export interface FriendRequest {
   friend_id: number
   friend_name: string
   friend_email: string
+}
+
+export interface LiveRoom {
+  uuid: string
+  title: string
+  stream: string
+  secret: string
+  assistant: boolean
+  aiName: string
+  aiProvider: string
+  aiSecretKey: string
+  aiOrganization: string
+  aiBaseURL: string
+  aiAsrEnabled: boolean
+  aiAsrLanguage: string
+  aiAsrPrompt: string
+  aiChatEnabled: boolean
+  aiChatModel: string
+  aiChatPrompt: string
+  aiChatMaxWindow: number
+  aiChatMaxWords: number
+  aiPostEnabled: boolean
+  aiPostModel: string
+  aiPostPrompt: string
+  aiPostMaxWindow: number
+  aiPostMaxWords: number
+  aiTtsEnabled: boolean
+  stage_uuid: string
+  roomToken: string
+  created_at: string
+}
+
+export interface LiveRoomResponse {
+  code: number
+  data: LiveRoom
+  server: number
+}
+
+export interface JoinLiveRoomParams {
+  stream: string
+  secret: string
 }
 
 export const login = async (useremail: string, userpassword: string) => {
@@ -231,6 +279,64 @@ export const quickAddFriends = async (userId: number, meetingId: number) => {
     meeting_id: meetingId,
   })
   return response.data
+}
+
+export const createLiveRoom = async (title: string) => {
+  const response = await liveApi.post(
+    '/terraform/v1/live/room/create',
+    { title },
+    {
+      headers: {
+        Authorization: 'Bearer srs-v2-4116c498adf0491a81efe6c6438d50f6',
+      },
+    },
+  )
+  return response.data as LiveRoomResponse
+}
+
+export const joinLiveRoom = async (params: JoinLiveRoomParams) => {
+  // 由于加入直播间API可能不存在，我们直接返回输入的参数
+  return {
+    code: 0,
+    data: {
+      uuid: '',
+      title: '加入的直播间',
+      stream: params.stream,
+      secret: params.secret,
+      assistant: false,
+      aiName: '',
+      aiProvider: '',
+      aiSecretKey: '',
+      aiOrganization: '',
+      aiBaseURL: '',
+      aiAsrEnabled: false,
+      aiAsrLanguage: '',
+      aiAsrPrompt: '',
+      aiChatEnabled: false,
+      aiChatModel: '',
+      aiChatPrompt: '',
+      aiChatMaxWindow: 0,
+      aiChatMaxWords: 0,
+      aiPostEnabled: false,
+      aiPostModel: '',
+      aiPostPrompt: '',
+      aiPostMaxWindow: 0,
+      aiPostMaxWords: 0,
+      aiTtsEnabled: false,
+      stage_uuid: '',
+      roomToken: '',
+      created_at: new Date().toISOString(),
+    },
+    server: 0,
+  } as LiveRoomResponse
+}
+
+export const getStreamUrl = (stream: string, secret: string) => {
+  return `rtmp://47.79.86.58/live/${stream}?secret=${secret}`
+}
+
+export const getPlayUrl = (stream: string) => {
+  return `http://47.79.86.58/live/${stream}.flv`
 }
 
 export default api

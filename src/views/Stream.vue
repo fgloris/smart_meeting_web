@@ -23,16 +23,22 @@
       </div>
 
       <div class="stream-info">
-        <div class="info-item">
+        <div v-if="currentRoom" class="info-item">
           <span class="label">直播URL:</span>
-          <span class="value">http://47.79.86.58/live/livestream.flv</span>
+          <span class="value">{{ getPlayUrl(currentRoom.stream) }}</span>
         </div>
-        <div class="info-item">
+        <div v-if="currentRoom" class="info-item">
           <span class="label">推流地址:</span>
-          <span class="value">rtmp://47.79.86.58/live/</span>
+          <span class="value">{{ getStreamUrl(currentRoom.stream, currentRoom.secret) }}</span>
         </div>
         <div class="stream-actions">
-          <button @click="refreshStream" class="refresh-btn">刷新直播</button>
+          <div v-if="!currentRoom" class="join-form">
+            <input v-model="joinStream" placeholder="输入stream" class="join-input" />
+            <input v-model="joinSecret" placeholder="输入secret" class="join-input" />
+            <button @click="handleJoinRoom" class="join-btn">加入直播间</button>
+            <button @click="handleCreateRoom" class="create-btn">创建直播间</button>
+          </div>
+          <button v-else @click="refreshStream" class="refresh-btn">刷新直播</button>
         </div>
       </div>
     </div>
@@ -42,12 +48,22 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
 import flvjs from 'flv.js'
+import {
+  createLiveRoom,
+  joinLiveRoom,
+  getPlayUrl,
+  getStreamUrl,
+  type LiveRoom,
+} from '@/services/api'
 
 const videoPlayer = ref<HTMLVideoElement | null>(null)
 const isLive = ref(false)
+const currentRoom = ref<LiveRoom | null>(null)
+const joinStream = ref('')
+const joinSecret = ref('')
 let flvPlayer: flvjs.Player | null = null
 
-const createPlayer = () => {
+const createPlayer = async (stream: string) => {
   if (!flvjs.isSupported()) {
     console.error('您的浏览器不支持flv.js，无法播放直播流')
     return
@@ -59,46 +75,84 @@ const createPlayer = () => {
 
   if (!videoPlayer.value) return
 
-  // 创建FLV播放器实例
-  flvPlayer = flvjs.createPlayer({
-    type: 'flv',
-    url: 'http://47.79.86.58/live/livestream.flv',
-    isLive: true,
-    hasAudio: true,
-    hasVideo: true,
-  })
-
-  // 绑定播放器元素
-  flvPlayer.attachMediaElement(videoPlayer.value)
-
-  // 添加事件监听
-  flvPlayer.on(flvjs.Events.LOADING_COMPLETE, () => {
-    console.log('加载完成')
-  })
-
-  flvPlayer.on(flvjs.Events.ERROR, (errType: string, errDetail: unknown) => {
-    console.error('播放器错误', errType, errDetail)
-    isLive.value = false
-  })
-
-  // 开始加载
-  flvPlayer.load()
-  // 开始播放
   try {
-    flvPlayer.play()
-    console.log('开始播放')
-    isLive.value = true
-  } catch (e) {
-    console.error('播放失败', e)
+    // 创建FLV播放器实例
+    flvPlayer = flvjs.createPlayer({
+      type: 'flv',
+      url: getPlayUrl(stream),
+      isLive: true,
+      hasAudio: true,
+      hasVideo: true,
+    })
+
+    // 绑定播放器元素
+    flvPlayer.attachMediaElement(videoPlayer.value)
+
+    // 添加事件监听
+    flvPlayer.on(flvjs.Events.LOADING_COMPLETE, () => {
+      console.log('加载完成')
+    })
+
+    flvPlayer.on(flvjs.Events.ERROR, (errType: string, errDetail: unknown) => {
+      console.error('播放器错误', errType, errDetail)
+      isLive.value = false
+    })
+
+    // 开始加载
+    flvPlayer.load()
+    // 开始播放
+    try {
+      flvPlayer.play()
+      console.log('开始播放')
+      isLive.value = true
+    } catch (e) {
+      console.error('播放失败', e)
+      isLive.value = false
+    }
+  } catch (error) {
+    console.error('创建播放器失败', error)
+    isLive.value = false
+  }
+}
+
+const handleCreateRoom = async () => {
+  try {
+    const response = await createLiveRoom('智能会议直播间')
+    currentRoom.value = response.data
+    await createPlayer(response.data.stream)
+  } catch (error) {
+    console.error('创建直播间失败', error)
+    isLive.value = false
+  }
+}
+
+const handleJoinRoom = async () => {
+  if (!joinStream.value || !joinSecret.value) {
+    alert('请输入stream和secret')
+    return
+  }
+
+  try {
+    const response = await joinLiveRoom({
+      stream: joinStream.value,
+      secret: joinSecret.value,
+    })
+
+    if (response.code === 0 && response.data) {
+      currentRoom.value = response.data
+      await createPlayer(response.data.stream)
+    } else {
+      alert('加入直播间失败，请检查stream和secret是否正确')
+    }
+  } catch (error) {
+    console.error('加入直播间失败', error)
+    alert('加入直播间失败，请检查stream和secret是否正确')
     isLive.value = false
   }
 }
 
 const checkStreamStatus = async () => {
   try {
-    // 这里可以添加检查直播状态的API请求
-    // 例如向后端请求当前直播状态
-    // 为简化处理，这里直接尝试加载直播流来判断状态
     if (flvPlayer) {
       isLive.value = flvPlayer.buffered.length > 0
     }
@@ -119,17 +173,18 @@ const destroyPlayer = () => {
 }
 
 const refreshStream = () => {
-  destroyPlayer()
-  setTimeout(() => {
-    createPlayer()
-  }, 1000)
+  if (currentRoom.value) {
+    destroyPlayer()
+    setTimeout(() => {
+      createPlayer(currentRoom.value!.stream)
+    }, 1000)
+  }
 }
 
 // 设置定期检查直播状态
 let statusCheckInterval: number | null = null
 
 onMounted(() => {
-  createPlayer()
   statusCheckInterval = window.setInterval(checkStreamStatus, 10000) // 每10秒检查一次直播状态
 })
 
@@ -236,6 +291,52 @@ onUnmounted(() => {
   margin-top: 1rem;
   display: flex;
   justify-content: flex-end;
+}
+
+.join-form {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.join-input {
+  padding: 0.5rem;
+  border: none;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  width: 150px;
+}
+
+.join-input:focus {
+  outline: none;
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.join-btn,
+.create-btn {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 4px;
+  color: white;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.join-btn {
+  background: rgba(149, 128, 255, 0.6);
+}
+
+.create-btn {
+  background: rgba(76, 217, 100, 0.6);
+}
+
+.join-btn:hover {
+  background: rgba(149, 128, 255, 0.8);
+}
+
+.create-btn:hover {
+  background: rgba(76, 217, 100, 0.8);
 }
 
 .refresh-btn {

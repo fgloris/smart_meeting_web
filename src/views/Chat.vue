@@ -260,10 +260,7 @@ onUnmounted(() => {
 
       <!-- 聊天窗口 -->
       <div class="chat-window">
-        <div v-if="currentFriend" class="chat-header">
-          <h3>{{ currentFriend.friend_name }}</h3>
-        </div>
-        <div v-else class="no-chat-selected">
+        <div v-if="!currentFriend" class="no-chat-selected">
           <p>请选择一个好友开始聊天</p>
         </div>
 
@@ -368,6 +365,7 @@ onUnmounted(() => {
   padding: 0.5rem;
   border-radius: 4px;
   transition: background-color 0.3s;
+  position: relative;
 }
 
 .add-friend-btn:hover,
@@ -642,8 +640,8 @@ onUnmounted(() => {
 
 .notification-badge {
   position: absolute;
-  top: -5px;
-  right: -5px;
+  top: -8px;
+  right: -8px;
   background: #ff6b6b;
   color: white;
   font-size: 0.7rem;
@@ -651,6 +649,7 @@ onUnmounted(() => {
   border-radius: 10px;
   min-width: 18px;
   text-align: center;
+  z-index: 1;
 }
 
 .request-user {
