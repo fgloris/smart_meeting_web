@@ -49,17 +49,24 @@ nvm_profile_is_bash_or_zsh() {
   esac
 }
 
+#
+# Outputs the location to NVM depending on:
+# * The availability of $NVM_SOURCE
+# * The presence of $NVM_INSTALL_GITHUB_REPO
+# * The method used ("script" or "git" in the script, defaults to "git")
+# NVM_SOURCE always takes precedence unless the method is "script-nvm-exec"
+#
 nvm_source() {
   local NVM_GITHUB_REPO
-  NVM_GITHUB_REPO="${NVM_INSTALL_GITHUB_REPO:-mirrors/nvm}"
-  if [ "${NVM_GITHUB_REPO}" != 'mirrors/nvm' ]; then
+  NVM_GITHUB_REPO="${NVM_INSTALL_GITHUB_REPO:-nvm-sh/nvm}"
+  if [ "${NVM_GITHUB_REPO}" != 'nvm-sh/nvm' ]; then
     { nvm_echo >&2 "$(cat)" ; } << EOF
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 @    WARNING: REMOTE REPO IDENTIFICATION HAS CHANGED!     @
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 IT IS POSSIBLE THAT SOMEONE IS DOING SOMETHING NASTY!
 
-The default repository for this install is \`mirrors/nvm\`,
+The default repository for this install is \`nvm-sh/nvm\`,
 but the environment variables \`\$NVM_INSTALL_GITHUB_REPO\` is
 currently set to \`${NVM_GITHUB_REPO}\`.
 
@@ -74,20 +81,27 @@ EOF
   local NVM_SOURCE_URL
   NVM_SOURCE_URL="$NVM_SOURCE"
   if [ "_$NVM_METHOD" = "_script-nvm-exec" ]; then
-    NVM_SOURCE_URL="https://gitee.com/${NVM_GITHUB_REPO}/raw/${NVM_VERSION}/nvm-exec"
+    NVM_SOURCE_URL="https://raw.githubusercontent.com/${NVM_GITHUB_REPO}/${NVM_VERSION}/nvm-exec"
   elif [ "_$NVM_METHOD" = "_script-nvm-bash-completion" ]; then
-    NVM_SOURCE_URL="https://gitee.com/${NVM_GITHUB_REPO}/raw/${NVM_VERSION}/bash_completion"
+    NVM_SOURCE_URL="https://raw.githubusercontent.com/${NVM_GITHUB_REPO}/${NVM_VERSION}/bash_completion"
   elif [ -z "$NVM_SOURCE_URL" ]; then
     if [ "_$NVM_METHOD" = "_script" ]; then
-      NVM_SOURCE_URL="https://gitee.com/${NVM_GITHUB_REPO}/raw/${NVM_VERSION}/nvm.sh"
+      NVM_SOURCE_URL="https://raw.githubusercontent.com/${NVM_GITHUB_REPO}/${NVM_VERSION}/nvm.sh"
     elif [ "_$NVM_METHOD" = "_git" ] || [ -z "$NVM_METHOD" ]; then
-      NVM_SOURCE_URL="https://gitee.com/${NVM_GITHUB_REPO}.git"
+      NVM_SOURCE_URL="https://github.com/${NVM_GITHUB_REPO}.git"
     else
       nvm_echo >&2 "Unexpected value \"$NVM_METHOD\" for \$NVM_METHOD"
       return 1
     fi
   fi
   nvm_echo "$NVM_SOURCE_URL"
+}
+
+#
+# Node.js version to install
+#
+nvm_node_version() {
+  nvm_echo "$NODE_VERSION"
 }
 
 nvm_download() {
@@ -186,6 +200,29 @@ install_nvm_from_git() {
   return
 }
 
+#
+# Automatically install Node.js
+#
+nvm_install_node() {
+  local NODE_VERSION_LOCAL
+  NODE_VERSION_LOCAL="$(nvm_node_version)"
+
+  if [ -z "$NODE_VERSION_LOCAL" ]; then
+    return 0
+  fi
+
+  nvm_echo "=> Installing Node.js version $NODE_VERSION_LOCAL"
+  nvm install "$NODE_VERSION_LOCAL"
+  local CURRENT_NVM_NODE
+
+  CURRENT_NVM_NODE="$(nvm_version current)"
+  if [ "$(nvm_version "$NODE_VERSION_LOCAL")" == "$CURRENT_NVM_NODE" ]; then
+    nvm_echo "=> Node.js version $NODE_VERSION_LOCAL has been successfully installed"
+  else
+    nvm_echo >&2 "Failed to install Node.js $NODE_VERSION_LOCAL"
+  fi
+}
+
 install_nvm_as_script() {
   local INSTALL_DIR
   INSTALL_DIR="$(nvm_install_dir)"
@@ -232,6 +269,12 @@ nvm_try_profile() {
   nvm_echo "${1}"
 }
 
+#
+# Detect profile file if not specified as environment variable
+# (eg: PROFILE=~/.myprofile)
+# The echo'ed path is guaranteed to be an existing file
+# Otherwise, an empty string is returned
+#
 nvm_detect_profile() {
   if [ "${PROFILE-}" = '/dev/null' ]; then
     # the user has specifically requested NOT to have nvm touch their profile
@@ -274,6 +317,10 @@ nvm_detect_profile() {
   fi
 }
 
+#
+# Check whether the user has any globally-installed npm modules in their system
+# Node, and warn them if so.
+#
 nvm_check_global_modules() {
   local NPM_COMMAND
   NPM_COMMAND="$(command -v npm 2>/dev/null)" || return 0
@@ -316,30 +363,6 @@ nvm_check_global_modules() {
     nvm_echo '     $ nvm use system'
     nvm_echo '     $ npm uninstall -g a_module'
     nvm_echo
-  fi
-}
-
-nvm_node_version() {
-  nvm_echo "$NODE_VERSION"
-}
-
-nvm_install_node() {
-  local NODE_VERSION_LOCAL
-  NODE_VERSION_LOCAL="$(nvm_node_version)"
-
-  if [ -z "$NODE_VERSION_LOCAL" ]; then
-    return 0
-  fi
-
-  nvm_echo "=> Installing Node.js version $NODE_VERSION_LOCAL"
-  nvm install "$NODE_VERSION_LOCAL"
-  local CURRENT_NVM_NODE
-
-  CURRENT_NVM_NODE="$(nvm_version current)"
-  if [ "$(nvm_version "$NODE_VERSION_LOCAL")" == "$CURRENT_NVM_NODE" ]; then
-    nvm_echo "=> Node.js version $NODE_VERSION_LOCAL has been successfully installed"
-  else
-    nvm_echo >&2 "Failed to install Node.js $NODE_VERSION_LOCAL"
   fi
 }
 
@@ -456,6 +479,10 @@ nvm_do_install() {
   fi
 }
 
+#
+# Unsets the various functions defined
+# during the execution of the install script
+#
 nvm_reset() {
   unset -f nvm_has nvm_install_dir nvm_latest_version nvm_profile_is_bash_or_zsh \
     nvm_source nvm_node_version nvm_download install_nvm_from_git nvm_install_node \
@@ -465,4 +492,4 @@ nvm_reset() {
 
 [ "_$NVM_ENV" = "_testing" ] || nvm_do_install
 
-} # this ensures the entire script is downloaded # 
+} # this ensures the entire script is downloaded #

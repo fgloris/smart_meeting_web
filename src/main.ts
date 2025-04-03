@@ -14,6 +14,13 @@ import {
   uniBell,
 } from 'vue-unicons/dist/icons'
 
+const app = createApp(App)
 const pinia = createPinia()
+
+// 注册图标
 Unicon.add([uniUpload, uniUsersAlt, uniTrashAlt, uniBars, uniPlus, uniBell])
-createApp(App).use(router).use(Unicon).use(pinia).mount('#app')
+
+app.use(router)
+app.use(Unicon)
+app.use(pinia)
+app.mount('#app')
