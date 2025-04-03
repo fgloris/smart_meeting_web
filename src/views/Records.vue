@@ -213,17 +213,17 @@ onMounted(() => {
           <div class="meeting-actions">
             <div class="dropdown-container">
               <button class="menu-btn" @click="toggleDropdown(meeting.id)">
-                <span class="menu-icon">☰</span>
+                <img src="@/assets/bars.svg" alt="菜单" class="menu-icon" />
               </button>
               <div v-if="showDropdown === meeting.id" class="dropdown-menu">
                 <button class="dropdown-item" @click="handleUpload(meeting.id)">
-                  <unicon name="upload" fill="#9580FF"></unicon> 上传文件
+                  <img src="@/assets/upload.svg" alt="上传" class="icon" /> 上传文件
                 </button>
                 <button class="dropdown-item" @click="handleInviteMember(meeting.id)">
-                  <unicon name="users-alt" fill="#9580FF"></unicon> 邀请成员
+                  <img src="@/assets/users.svg" alt="用户" class="icon" /> 邀请成员
                 </button>
                 <button class="dropdown-item delete" @click="handleDeleteMeeting(meeting.id)">
-                  <unicon name="trash-alt" fill="#9580FF"></unicon> 删除会议
+                  <img src="@/assets/trash.svg" alt="删除" class="icon" /> 删除会议
                 </button>
               </div>
             </div>
@@ -380,8 +380,22 @@ onMounted(() => {
   background: rgba(255, 107, 107, 0.1);
 }
 
+.menu-icon {
+  width: 20px;
+  height: 20px;
+  fill: rgba(0, 0, 0, 0.7);
+}
+
 .icon {
-  font-size: 1.2rem;
+  width: 16px;
+  height: 16px;
+  fill: rgba(0, 0, 0, 0.7);
+  margin-right: 5px;
+  vertical-align: middle;
+}
+
+.dropdown-item.delete .icon {
+  fill: #ff6b6b;
 }
 
 .upload-btn {

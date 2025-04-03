@@ -206,13 +206,13 @@ onUnmounted(() => {
           <h2>好友列表</h2>
           <div class="friends-actions">
             <button class="add-friend-btn" @click="showAddFriendModal = true">
-              <unicon name="plus" fill="#9580FF"></unicon>
+              <img src="@/assets/plus.svg" alt="添加" class="icon" />
             </button>
             <button
               class="pending-requests-btn"
               @click="showPendingRequests = !showPendingRequests"
             >
-              <unicon name="bell" fill="#9580FF"></unicon>
+              <img src="@/assets/bell.svg" alt="通知" class="icon" />
               <span v-if="pendingRequests.length" class="notification-badge">
                 {{ pendingRequests.length }}
               </span>
@@ -656,5 +656,17 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   gap: 0.5rem;
+}
+
+.icon {
+  width: 20px;
+  height: 20px;
+  fill: #9580ff;
+}
+
+.add-friend-btn .icon,
+.pending-requests-btn .icon {
+  width: 20px;
+  height: 20px;
 }
 </style>
