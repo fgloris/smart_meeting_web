@@ -13,9 +13,13 @@ const routes: Array<RouteRecordRaw> = [
     component: HomeContent,
   },
   {
-    path: '/docs',
-    name: 'Docs',
+    path: '/download',
+    name: 'Download',
     component: DocsPage,
+    alias: '/docs', // 保持旧路径兼容
+    meta: {
+      title: '下载智能会议助手'
+    }
   },
   {
     path: '/ability',
@@ -42,6 +46,12 @@ const routes: Array<RouteRecordRaw> = [
 const router = createRouter({
   history: createWebHistory(),
   routes,
+})
+
+// 设置页面标题
+router.beforeEach((to, from, next) => {
+  document.title = to.meta.title ? `${to.meta.title} - 智能会议助手` : '智能会议助手'
+  next()
 })
 
 export default router

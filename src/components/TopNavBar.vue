@@ -82,10 +82,16 @@ onUnmounted(() => {
 
 <template>
   <nav class="navbar">
-    <div v-if="true" class="nav-left">
-      <router-link to="/" class="nav-link">下载</router-link>
-      <router-link to="/docs" class="nav-link">文档</router-link>
-      <router-link to="/ability/records" class="nav-link">功能</router-link>
+    <div class="nav-left">
+      <router-link to="/" class="logo-link">
+        <img src="@/assets/ic_launcher.png" alt="智能会议助手" class="navbar-logo">
+        <span class="logo-text">智能会议助手</span>
+      </router-link>
+      <div class="nav-links">
+        <router-link to="/" class="nav-link">主页</router-link>
+        <router-link to="/download" class="nav-link">下载</router-link>
+        <router-link to="/ability/records" class="nav-link">功能</router-link>
+      </div>
     </div>
     <div class="nav-right">
       <div v-if="authStore.isAuthenticated" class="user-profile">
@@ -158,43 +164,72 @@ onUnmounted(() => {
 
 <style scoped>
 .navbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 1rem;
+  height: 80px;
+  width: 100%;
+  background: linear-gradient(to right, #1a202c, #2d3748);
+  color: white;
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
-  z-index: 3;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1rem 1rem;
-  background: transparent;
-  height: 80px;
+  z-index: 100;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
 
 .nav-left {
   display: flex;
-  gap: 1rem;
+  align-items: center;
+}
+
+.logo-link {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+  margin-right: 2rem;
+}
+
+.navbar-logo {
+  width: 36px;
+  height: 36px;
+  margin-right: 0.5rem;
+}
+
+.logo-text {
+  font-weight: 600;
+  font-size: 1.2rem;
+  color: white;
+  background: linear-gradient(90deg, var(--primary-color, #4285f4), var(--secondary-color, #34a853));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.nav-links {
+  display: flex;
+  gap: 0.5rem;
 }
 
 .nav-link {
   color: white;
   text-decoration: none;
-  font-size: 1rem;
-  padding: 5px 20px;
+  font-size: 0.95rem;
+  padding: 0.5rem 1rem;
   border-radius: 20px;
-  backdrop-filter: blur(10px);
-  transition: opacity 0.3s;
+  transition: all 0.3s ease;
 }
 
 .nav-link:hover {
-  background-color: rgb(50, 50, 50, 0.8);
-  opacity: 0.8;
+  background-color: rgba(255, 255, 255, 0.1);
 }
 
 .nav-link.router-link-active {
-  background-color: rgb(120, 120, 120, 0.8);
-  font-weight: 1000;
-  opacity: 1;
+  background-color: rgba(66, 133, 244, 0.2);
+  color: var(--primary-color, #4285f4);
+  font-weight: 500;
 }
 
 .nav-right {
@@ -212,27 +247,43 @@ onUnmounted(() => {
 .username {
   color: white;
   margin-right: 0.5rem;
+  font-size: 0.9rem;
+  opacity: 0.9;
 }
 
 .avatar {
   width: 36px;
   height: 36px;
-  background: #4caf50;
+  background: var(--primary-color, #4285f4);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: bold;
   cursor: pointer;
+  box-shadow: 0 2px 8px rgba(66, 133, 244, 0.3);
+  transition: transform 0.2s ease;
+}
+
+.avatar:hover {
+  transform: scale(1.05);
 }
 
 .login-btn {
-  padding: 0.5rem 1rem;
-  background: rgba(149, 128, 255, 0.8);
+  padding: 0.5rem 1.2rem;
+  background: var(--primary-color, #4285f4);
   border: none;
   border-radius: 20px;
   color: white;
   cursor: pointer;
+  font-weight: 500;
+  box-shadow: 0 2px 8px rgba(66, 133, 244, 0.3);
+  transition: all 0.3s ease;
+}
+
+.login-btn:hover {
+  background: var(--secondary-color, #34a853);
+  transform: translateY(-2px);
 }
 
 .modal-overlay {
@@ -241,7 +292,9 @@ onUnmounted(() => {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -249,41 +302,35 @@ onUnmounted(() => {
 }
 
 .modal {
-  background: white;
+  background: #1e1e1e;
+  border-radius: 10px;
   padding: 2rem;
-  border-radius: 8px;
-  width: 300px;
+  width: 100%;
+  max-width: 400px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
 }
 
 .modal h2 {
-  color: #333;
-  margin-bottom: 1rem;
+  color: white;
+  margin-top: 0;
+  margin-bottom: 1.5rem;
+  text-align: center;
 }
 
 .modal input {
   width: 100%;
-  padding: 0.5rem;
+  padding: 0.75rem 1rem;
   margin-bottom: 1rem;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-}
-
-.modal-buttons {
-  display: flex;
-  gap: 1rem;
-  justify-content: flex-end;
-}
-
-.modal-buttons button {
-  padding: 0.5rem 1rem;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.modal-buttons button:first-child {
-  background: rgba(149, 128, 255, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 5px;
   color: white;
+  font-size: 1rem;
+}
+
+.modal input:focus {
+  outline: none;
+  border-color: var(--primary-color, #4285f4);
 }
 
 .verify-group {
@@ -298,83 +345,80 @@ onUnmounted(() => {
 }
 
 .verify-btn {
-  padding: 0.5rem 1rem;
-  background: rgba(149, 128, 255, 0.8);
+  padding: 0 1rem;
+  background: rgba(255, 255, 255, 0.1);
   border: none;
-  border-radius: 4px;
+  border-radius: 5px;
   color: white;
   cursor: pointer;
   white-space: nowrap;
 }
 
-.verify-btn:hover {
-  background: rgba(149, 128, 255, 1);
-}
-
-.modal {
-  max-width: 400px;
-  width: 90%;
+.modal-buttons {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
 }
 
 .modal-buttons button {
   flex: 1;
-  background: rgba(149, 128, 255, 0.8);
-  margin-top: 5%;
+  padding: 0.75rem;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.modal-buttons button:first-child {
+  background: var(--primary-color, #4285f4);
   color: white;
 }
 
-.modal-buttons button:hover {
-  background: rgba(149, 128, 255, 1);
+.modal-buttons button:last-child {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
 }
 
 .modal-buttons-switchmode {
   width: 100%;
   padding: 0.5rem;
-  border: none;
   background: transparent;
-  color: rgba(149, 128, 255, 0.8);
-  text-decoration: underline;
+  border: none;
+  color: var(--primary-color, #4285f4);
   cursor: pointer;
-  font-size: 0.9rem;
-  margin-top: 1rem;
-}
-
-.modal-buttons-switchmode:hover {
-  color: rgba(149, 128, 255, 1);
+  text-align: center;
 }
 
 .user-menu {
   position: absolute;
-  top: 100%;
+  top: calc(100% + 10px);
   right: 0;
-  margin-top: 10px;
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(10px);
-  border-radius: 12px;
-  padding: 16px;
-  min-width: 240px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  z-index: 1000;
+  background: #1e1e1e;
+  border-radius: 10px;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+  width: 250px;
+  z-index: 4;
+  overflow: hidden;
+  animation: fadeIn 0.2s ease;
 }
 
 .user-info {
   display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 12px;
+  padding: 1.5rem;
+  background: linear-gradient(135deg, rgba(66, 133, 244, 0.1), rgba(52, 168, 83, 0.1));
 }
 
 .user-avatar {
   width: 48px;
   height: 48px;
-  background: #4caf50;
+  background: var(--primary-color, #4285f4);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: bold;
-  font-size: 20px;
-  color: white;
+  font-size: 1.2rem;
+  margin-right: 1rem;
 }
 
 .user-details {
@@ -382,37 +426,37 @@ onUnmounted(() => {
 }
 
 .user-name {
-  font-weight: bold;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
   color: white;
-  margin-bottom: 4px;
 }
 
 .user-email {
+  font-size: 0.8rem;
   color: rgba(255, 255, 255, 0.7);
-  font-size: 0.9em;
 }
 
 .menu-divider {
   height: 1px;
   background: rgba(255, 255, 255, 0.1);
-  margin: 8px 0;
+  margin: 0 1rem;
 }
 
 .menu-actions {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+  padding: 1rem;
 }
 
 .menu-button {
+  width: 100%;
+  padding: 0.75rem;
   background: transparent;
   border: none;
+  border-radius: 5px;
   color: white;
-  padding: 8px 12px;
-  border-radius: 6px;
-  cursor: pointer;
   text-align: left;
-  transition: background-color 0.2s;
+  cursor: pointer;
+  margin-bottom: 0.5rem;
+  transition: background-color 0.2s ease;
 }
 
 .menu-button:hover {
@@ -420,10 +464,56 @@ onUnmounted(() => {
 }
 
 .menu-button.logout {
-  color: #ff6b6b;
+  color: #f44336;
 }
 
-.menu-button.logout:hover {
-  background: rgba(255, 107, 107, 0.1);
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 768px) {
+  .navbar {
+    padding: 0.5rem 1rem;
+  }
+  
+  .logo-text {
+    display: none;
+  }
+  
+  .logo-link {
+    margin-right: 1rem;
+  }
+  
+  .nav-link {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.9rem;
+  }
+  
+  .username {
+    display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .nav-links {
+    gap: 0.2rem;
+  }
+  
+  .nav-link {
+    padding: 0.5rem 0.6rem;
+    font-size: 0.8rem;
+  }
+  
+  .login-btn {
+    padding: 0.5rem 0.8rem;
+    font-size: 0.9rem;
+  }
 }
 </style>

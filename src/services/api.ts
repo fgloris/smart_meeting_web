@@ -1,6 +1,6 @@
 import axios from 'axios'
 
-const BASE_URL = 'http://1.92.146.109:5000'
+const BASE_URL = 'http://113.44.1.161:5000'
 const LIVE_SERVER_URL = 'http://47.79.86.58'
 
 const api = axios.create({
@@ -201,12 +201,20 @@ export const getChatHistory = async (userId: number, friendId: number) => {
 }
 
 export const sendMessage = async (senderId: number, receiverId: number, content: string) => {
-  const response = await api.post('/api/message', {
-    sender_id: senderId,
-    receiver_id: receiverId,
-    content: content,
-  })
-  return response.data
+  console.log('发送消息到API，参数:', { senderId, receiverId, content });
+  try {
+    const response = await api.post('/api/message', {
+      sender_id: senderId,
+      receiver_id: receiverId,
+      content: content,
+    });
+    console.log('消息发送成功，服务器响应:', response.data);
+    return response.data;
+  } catch (error: any) {
+    console.error('消息发送失败:', error.response ? error.response.data : error.message);
+    // 向上抛出错误，让调用方可以处理
+    throw error;
+  }
 }
 
 export const getUnreadMessages = async (userId: number) => {

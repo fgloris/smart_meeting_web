@@ -266,11 +266,14 @@ onMounted(() => {
 .records-page {
   position: relative;
   z-index: 1;
-  padding: 2rem;
-  color: white;
-  min-height: 100vh;
+  padding: 1.5rem 2rem;
+  color: var(--text-color);
+  min-height: 100%;
+  height: 100%;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
   background: transparent;
-  margin-left: 7%;
 }
 
 .header {
@@ -280,18 +283,35 @@ onMounted(() => {
   align-items: center;
 }
 
+.header h1 {
+  color: #1a73e8;
+  font-weight: 700;
+  margin: 0;
+}
+
 .meetings-container {
   display: flex;
   flex-direction: column;
   gap: 2rem;
-  margin-left: 5%;
-  margin-right: 7%;
+  width: 100%;
+  flex: 1;
+  overflow-y: auto;
 }
 
 .meeting-section {
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 8px;
-  padding: 1.5rem;
+  background: var(--card-background, white);
+  border-radius: 12px;
+  padding: 1.5rem 2rem;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(66, 133, 244, 0.1);
+  transition: all 0.3s ease;
+  margin-bottom: 1.5rem;
+}
+
+.meeting-section:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(66, 133, 244, 0.1);
+  border-color: rgba(66, 133, 244, 0.2);
 }
 
 .meeting-header {
@@ -307,14 +327,17 @@ onMounted(() => {
 
 .meeting-header h2 {
   margin: 0 0 0.5rem 0;
-  color: white;
+  color: #1a73e8;
+  font-weight: 600;
 }
 
 .meeting-info {
   display: flex;
+  flex-wrap: wrap;
   gap: 1.5rem;
-  color: rgba(255, 255, 255, 0.7);
+  color: #5f6368;
   font-size: 0.9rem;
+  margin-top: 0.5rem;
 }
 
 .meeting-actions {
@@ -326,31 +349,31 @@ onMounted(() => {
 }
 
 .menu-btn {
-  background: none;
+  background: rgba(66, 133, 244, 0.1);
   border: none;
-  color: white;
-  font-size: 1.5rem;
+  color: var(--primary-color);
+  font-size: l.25rem;
   cursor: pointer;
   padding: 0.5rem;
-  border-radius: 4px;
+  border-radius: 8px;
   transition: background-color 0.3s;
 }
 
 .menu-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(66, 133, 244, 0.2);
 }
 
 .dropdown-menu {
   position: absolute;
   top: 100%;
   right: 0;
-  background: rgba(0, 0, 0, 0.3);
-  backdrop-filter: blur(10px);
+  background: var(--card-background);
   border-radius: 8px;
   padding: 0.5rem;
   min-width: 150px;
   z-index: 1000;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 15px var(--shadow-color);
+  border: 1px solid var(--border-color);
 }
 
 .dropdown-item {
@@ -361,23 +384,25 @@ onMounted(() => {
   padding: 0.5rem 1rem;
   border: none;
   background: none;
-  color: white;
+  color: #1a73e8;
   cursor: pointer;
   text-align: left;
   border-radius: 4px;
-  transition: background-color 0.3s;
+  transition: all 0.3s ease;
+  font-weight: 500;
 }
 
 .dropdown-item:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(66, 133, 244, 0.08);
+  transform: translateY(-1px);
 }
 
 .dropdown-item.delete {
-  color: #ff6b6b;
+  color: #ea4335;
 }
 
 .dropdown-item.delete:hover {
-  background: rgba(255, 107, 107, 0.1);
+  background: rgba(234, 67, 53, 0.08);
 }
 
 .menu-icon {
@@ -400,116 +425,176 @@ onMounted(() => {
 
 .upload-btn {
   padding: 0.5rem 1rem;
-  background: rgba(149, 128, 255, 0.6);
+  background: var(--primary-color);
   border: none;
-  border-radius: 4px;
+  border-radius: 8px;
   color: white;
   cursor: pointer;
   transition: all 0.3s;
 }
 
 .upload-btn:hover {
-  background: rgba(149, 128, 255, 0.8);
+  background: rgba(66, 133, 244, 0.8);
+  transform: translateY(-2px);
 }
 
 .no-files {
   text-align: center;
   padding: 2rem;
-  color: rgba(255, 255, 255, 0.5);
+  color: #5f6368;
   font-style: italic;
 }
 
 .file-list {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 1rem;
+  margin-top: 1.5rem;
 }
 
 .file-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1rem;
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 4px;
-  transition: all 0.3s;
+  padding: 1rem 1.5rem;
+  background: rgba(250, 250, 250, 0.9);
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  border-left: 3px solid rgba(66, 133, 244, 0.5);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
 }
 
 .file-item:hover {
-  background: rgba(149, 128, 255, 0.1);
+  background: rgba(250, 250, 255, 0.95);
+  transform: translateY(-2px);
+  border-left-color: #1a73e8;
+  box-shadow: 0 4px 12px rgba(66, 133, 244, 0.1);
 }
 
 .file-info {
   display: flex;
+  flex-wrap: wrap;
   gap: 2rem;
   align-items: center;
 }
 
 .file-actions {
   display: flex;
-  gap: 0.5rem;
+  gap: 0.8rem;
 }
 
 .file-name {
   min-width: 200px;
+  font-weight: 500;
+  color: #202124;
 }
 
 .file-size {
   min-width: 80px;
+  color: #5f6368;
 }
 
 .file-date {
   min-width: 150px;
+  color: #5f6368;
 }
 
 .file-type {
   min-width: 60px;
   text-transform: uppercase;
+  color: #1a73e8;
+  font-weight: 500;
+  font-size: 0.85rem;
 }
 
 .download-btn {
-  padding: 0.3rem 0.8rem;
-  background: rgba(149, 128, 255, 0.4);
+  padding: 0.4rem 1rem;
+  background: var(--primary-color);
   border: none;
-  border-radius: 4px;
+  border-radius: 6px;
   color: white;
   cursor: pointer;
+  transition: all 0.3s;
+  font-weight: 500;
 }
 
 .download-btn:hover {
-  background: rgba(149, 128, 255, 0.6);
+  background: rgba(66, 133, 244, 0.85);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(66, 133, 244, 0.2);
 }
 
 .delete-btn {
-  padding: 0.3rem 0.8rem;
-  background: rgba(255, 107, 107, 0.4);
-  border: none;
-  border-radius: 4px;
-  color: #ff6b6b;
+  padding: 0.4rem 1rem;
+  background: white;
+  border: 1px solid #ea4335;
+  border-radius: 6px;
+  color: #ea4335;
   cursor: pointer;
+  transition: all 0.3s;
+  font-weight: 500;
 }
 
 .delete-btn:hover {
-  background: rgba(255, 107, 107, 0.6);
+  background: rgba(234, 67, 53, 0.1);
+  transform: translateY(-2px);
 }
 
 .loading {
   text-align: center;
   padding: 2rem;
-  color: rgba(255, 255, 255, 0.6);
+  color: #5f6368;
 }
 
 .create-meeting-btn {
-  padding: 0.5rem 1rem;
-  background: rgba(149, 128, 255, 0.6);
+  padding: 0.5rem 1.2rem;
+  background: var(--primary-color);
   border: none;
-  border-radius: 4px;
+  border-radius: 8px;
   color: white;
   cursor: pointer;
   transition: all 0.3s;
+  font-weight: 500;
+  box-shadow: 0 4px 10px rgba(66, 133, 244, 0.2);
 }
 
 .create-meeting-btn:hover {
-  background: rgba(149, 128, 255, 0.8);
+  background: rgba(66, 133, 244, 0.85);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 15px rgba(66, 133, 244, 0.3);
+}
+
+@media (max-width: 768px) {
+  .records-page {
+    padding: 1rem;
+    height: calc(100vh - 80px);
+  }
+  
+  .meeting-section {
+    padding: 1.5rem;
+  }
+  
+  .meeting-info {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .file-info {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.7rem;
+  }
+  
+  .file-item {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .file-actions {
+    margin-top: 1rem;
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+  }
 }
 </style>
